@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="ja">
+<head><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700&display=swap">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>nichi — 日付デモ</title>
+<style>
+/* ── デザインシステム ─────────────────────────────
+ 余白: 4pt グリッド / 画面マージン 24 / 角丸: カード24・グループ20・チップ14・ボタン円
+ 文字: SF（rem）/ 数字は Outfit / タップ領域 44 以上
+ ガラス: バー・ボタン・メニュー・スタンプホイール・トーストだけ。カードと本文は不透明
+ 背景: いちばん近い日付のテーマ色から作る固定グラデーション（スクロールしても動かない） */
+:root{--bg:#f7f6f3;--surface:#fff;--ink:#111;--muted:#6b6b70;--line:rgba(0,0,0,.08);--fill:rgba(120,120,128,.12);--btn:#0071e3;--btntext:#fff;--danger:#d70015;--accent:#0071e3;--ring:rgba(17,17,17,.6);--navtint:rgba(247,246,243,.55);--lav:#dcd3ff;--lime:#e3f58c;--coral:#ffc6b8;--sky:#c9e6ff;--pink:#ffd1e8;--mint:#c6f0d8;--peach:#ffd9a8;--red:#e5372d;--orange:#f2711c;--yellow:#ffd60a;--green:#23913f;--teal:#0b7f8a;--blue:#2f6df6;--indigo:#4b3fd1;--purple:#8e3fd1;--rose:#d6336c;--brown:#8b5a3c;--graphite:#4a4f57;
+--g-bg:rgba(255,255,255,.56);--g-hi:rgba(255,255,255,.95);--g-edge:rgba(0,0,0,.07);--thumb:rgba(255,255,255,.9);--scrim:rgba(0,0,0,.32);
+--ease:cubic-bezier(.32,.72,0,1);--spring:cubic-bezier(.22,1.12,.36,1);--sp1:4px;--sp2:8px;--sp3:12px;--sp4:16px;--sp5:20px;--sp6:24px;--sp8:32px;--r-card:24px;--r-grp:20px;--r-chip:14px;--dur:.28s;--sh0:0 1px 2px rgba(0,0,0,.05);--sh1:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.04);--sh2:0 2px 4px rgba(0,0,0,.05),0 8px 22px rgba(0,0,0,.08);--hi:inset 0 0 0 0 transparent;box-sizing:border-box}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#000;--surface:#1c1c1e;--ink:#fff;--muted:#98989d;--line:rgba(255,255,255,.14);--fill:rgba(120,120,128,.24);--danger:#ff453a;--accent:#2e90ff;--ring:rgba(255,255,255,.7);--navtint:rgba(0,0,0,.45);--sh0:0 1px 2px rgba(0,0,0,.5);--sh1:0 1px 2px rgba(0,0,0,.5),0 6px 18px rgba(0,0,0,.4);--sh2:0 2px 4px rgba(0,0,0,.5),0 12px 30px rgba(0,0,0,.55);--hi:inset 0 1px 0 rgba(255,255,255,.07);--lav:#5b4f7d;--lime:#4f5e1b;--coral:#74493f;--sky:#34546a;--pink:#744058;--mint:#3d6650;--peach:#755636;--g-bg:rgba(44,44,46,.6);--g-hi:rgba(255,255,255,.16);--g-edge:rgba(255,255,255,.1);--thumb:rgba(255,255,255,.16);--scrim:rgba(0,0,0,.55)}}
+:root[data-theme="dark"]{--bg:#000;--surface:#1c1c1e;--ink:#fff;--muted:#98989d;--line:rgba(255,255,255,.14);--fill:rgba(120,120,128,.24);--danger:#ff453a;--accent:#2e90ff;--ring:rgba(255,255,255,.7);--navtint:rgba(0,0,0,.45);--sh0:0 1px 2px rgba(0,0,0,.5);--sh1:0 1px 2px rgba(0,0,0,.5),0 6px 18px rgba(0,0,0,.4);--sh2:0 2px 4px rgba(0,0,0,.5),0 12px 30px rgba(0,0,0,.55);--hi:inset 0 1px 0 rgba(255,255,255,.07);--lav:#5b4f7d;--lime:#4f5e1b;--coral:#74493f;--sky:#34546a;--pink:#744058;--mint:#3d6650;--peach:#755636;--g-bg:rgba(44,44,46,.6);--g-hi:rgba(255,255,255,.16);--g-edge:rgba(255,255,255,.1);--thumb:rgba(255,255,255,.16);--scrim:rgba(0,0,0,.55)}
+html{font-size:17px;font:-apple-system-body;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;-webkit-text-size-adjust:100%}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.3;-webkit-font-smoothing:antialiased;overflow:hidden}
+button,input,textarea{font:inherit;color:inherit;margin:0}button{cursor:pointer;border:0;background:none;padding:0}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+.ic{display:block;flex:none}
+.glass{background:var(--g-bg);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);box-shadow:inset 0 1px 0 var(--g-hi),inset 0 0 0 .5px var(--g-edge),0 6px 22px rgba(0,0,0,.1)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.glass{background:var(--surface)}}
+@media (prefers-contrast:more),(prefers-reduced-transparency:reduce){.glass{background:var(--surface);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:inset 0 0 0 2px var(--muted)}}
+/* 背景（予定連動・固定） */
+.bgfx{position:fixed;inset:0;z-index:0;pointer-events:none}
+.bgl{position:absolute;inset:0;opacity:0;transition:opacity .7s cubic-bezier(.4,0,.2,1)}.bgl.on{opacity:1}
+/* ページャー */
+.pager{position:fixed;inset:0;z-index:1;overflow:hidden;touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.track{display:flex;height:100%;width:100%;will-change:transform}
+.pane{flex:none;width:100%;height:100%;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding-top:env(safe-area-inset-top,0px);scrollbar-width:none}
+.pane::-webkit-scrollbar,.solo::-webkit-scrollbar{display:none}
+.solo{position:fixed;inset:0;z-index:1;overflow-y:auto;overscroll-behavior:contain;padding-top:env(safe-area-inset-top,0px);scrollbar-width:none}
+.app{position:relative;max-width:560px;margin:0 auto;padding:0 var(--sp6) 200px;min-height:100%}
+.lt{padding:56px 0 var(--sp4)}
+.lrow{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--sp3)}.mn{display:flex;gap:var(--sp2);flex:none}
+.cap{margin:0;font-size:.82rem;color:var(--muted);font-weight:500;min-height:1.2em}
+h1{position:relative;margin:var(--sp1) 0 0;min-height:1.15em;font-size:2rem;line-height:1.15;font-weight:700;letter-spacing:-.02em;white-space:nowrap;font-variant-numeric:tabular-nums}
+.dg{display:inline-block;white-space:pre}.old{position:absolute;left:0;top:0;white-space:pre;pointer-events:none}
+.rail{position:absolute;left:0;top:0;bottom:0;width:var(--sp6);z-index:2;-webkit-touch-callout:none}
+.rail:focus-visible{outline-offset:-3px}
+.nav{position:fixed;top:0;left:0;right:0;z-index:35;padding-top:env(safe-area-inset-top,0px);pointer-events:none;--p:0}
+.nav:before{content:"";position:absolute;inset:0 0 -16px;background:linear-gradient(var(--navtint) 50%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);-webkit-mask-image:linear-gradient(#000 60%,transparent);mask-image:linear-gradient(#000 60%,transparent);opacity:var(--p)}
+.nav-in{position:relative;max-width:560px;margin:0 auto;height:56px;padding:0 var(--sp6);display:flex;align-items:center;justify-content:space-between;gap:var(--sp3)}
+.nt{position:absolute;left:0;right:0;text-align:center;font-weight:600;opacity:var(--p);pointer-events:none}
+.na{margin-left:auto;display:flex;gap:var(--sp2);pointer-events:auto;position:relative}
+.gbtn{min-width:44px;height:44px;border-radius:22px;display:grid;place-items:center;font-weight:600;color:var(--ink)}
+.gbtn.pill{padding:0 var(--sp5)}.gbtn.tint{background:var(--btn);color:var(--btntext)}
+.gbtn:active,.fab:active{transform:scale(.92)}.gbtn,.fab{transition:transform .35s var(--ease)}
+/* セグメント */
+.seg{position:relative;display:flex;padding:3px;background:var(--fill);border-radius:14px;--n:3;--i:0}
+.seg .thumb{position:absolute;top:3px;bottom:3px;left:3px;width:calc((100% - 6px)/var(--n));border-radius:11px;background:var(--thumb);box-shadow:0 1px 3px rgba(0,0,0,.12),inset 0 0 0 .5px var(--line);transform:translateX(calc(var(--i)*100%));transition:transform .5s var(--ease)}
+.seg button{position:relative;flex:1;min-height:38px;border-radius:11px;font-size:.88rem;font-weight:500;color:var(--muted);transition:color .25s}
+.seg button[aria-pressed="true"]{color:var(--ink);font-weight:600}
+.search{display:flex;align-items:center;gap:var(--sp2);height:44px;margin:var(--sp3) 0 var(--sp6);padding:0 var(--sp3);border-radius:14px;background:var(--fill);color:var(--muted)}
+.search input{flex:1;min-width:0;height:100%;border:0;background:none;outline:0;color:var(--ink);-webkit-user-select:text;user-select:text}
+/* 一覧 */
+#list{display:flex;flex-direction:column;gap:var(--sp3)}
+.sec{font-size:1.18rem;font-weight:700;margin:var(--sp3) 0 0}.sec:first-child{margin-top:0}
+.row{display:flex;gap:var(--sp3);align-items:center}
+.card{position:relative;flex:1;min-width:0;display:flex;flex-direction:column;gap:var(--sp4);text-align:left;padding:var(--sp5);border-radius:var(--r-card);background:var(--surface);--edge:inset 0 0 0 1px var(--line);box-shadow:var(--sh1),var(--edge),var(--hi);overflow:hidden;transition:transform var(--dur) var(--ease),box-shadow var(--dur) var(--ease)}
+@media (hover:hover){.card:hover{z-index:1;transform:translateY(-1px);box-shadow:var(--sh2),var(--edge),var(--hi)}}
+.card:active{transform:scale(.985);box-shadow:var(--sh0),var(--edge),var(--hi)}
+.card>*{position:relative}
+.card.feat{background:var(--g);--edge:inset 0 0 0 0 transparent}
+.head{display:flex;align-items:center;gap:var(--sp3)}
+.chip{flex:none;width:44px;height:44px;border-radius:var(--r-chip);display:grid;place-items:center;font-size:1.35rem;background:var(--g);color:var(--ink)}
+.feat .chip{background:rgba(255,255,255,.55)}:root[data-theme="dark"] .feat .chip{background:rgba(0,0,0,.25)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .feat .chip{background:rgba(0,0,0,.25)}}
+.ttl{font-weight:600;font-size:1rem;line-height:1.3;overflow-wrap:anywhere;min-width:0}.ttl small{display:block;font-size:.76rem;font-weight:600;margin-bottom:2px}.ttl .sub{display:block;font-size:.8rem;font-weight:500;color:var(--muted);margin:2px 0 0}
+.cnt{display:flex;align-items:baseline;gap:var(--sp2);flex-wrap:wrap;font-family:"Outfit",-apple-system,"SF Pro Display",system-ui,sans-serif}
+.cnt b{font-size:3.2rem;line-height:1;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}.feat .cnt b{font-size:4.6rem}
+.cnt span{font-size:1.1rem;font-weight:700}
+.dt{display:flex;align-items:center;gap:var(--sp2);font-size:.88rem;color:var(--muted)}.feat .dt{color:var(--ink)}
+.mv{display:flex;flex-direction:column;gap:var(--sp2)}.mv button{width:44px;height:44px;border-radius:14px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);display:grid;place-items:center}.mv button:disabled{opacity:.3}
+.empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:var(--sp3);padding:64px var(--sp4) var(--sp8)}.empty.sm{padding:var(--sp6) var(--sp4)}
+.empty .ico{display:grid;place-items:center;color:var(--muted);opacity:.85;margin-bottom:var(--sp1)}.empty .ico .ic{stroke-width:1.25}
+.empty h3{margin:0;font-size:1.3rem;letter-spacing:-.01em}.empty p{margin:0;color:var(--muted);font-size:.94rem;line-height:1.5}
+.btn{height:50px;padding:0 var(--sp6);border-radius:25px;background:var(--btn);color:var(--btntext);font-weight:600;margin-top:var(--sp3);transition:transform .35s var(--ease)}.btn:active{transform:scale(.96)}
+/* カレンダー */
+.cal{background:var(--surface);border-radius:var(--r-card);padding:var(--sp2) var(--sp2) var(--sp3);box-shadow:var(--sh1),inset 0 0 0 1px var(--line);margin-bottom:var(--sp6)}
+.wk,.cg{display:grid;grid-template-columns:repeat(7,1fr)}
+.wk span{text-align:center;font-size:.72rem;color:var(--muted);font-weight:600;padding:var(--sp2) 0}
+.dc{height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border-radius:14px;font-size:1rem;font-weight:500;font-variant-numeric:tabular-nums;transition:background .25s,color .25s}
+.dc b{font-weight:inherit;line-height:1}.dc.today b{color:var(--accent);font-weight:700}
+.dc[aria-pressed="true"]{background:var(--ink);color:var(--bg)}.dc[aria-pressed="true"].today b{color:var(--bg)}
+.dc .mk{display:flex;gap:3px;height:6px}.dc .mk i{width:6px;height:6px;border-radius:3px;background:var(--w);box-shadow:inset 0 0 0 .5px rgba(0,0,0,.28)}
+.dc.out{visibility:hidden}
+/* 場所 */
+.map{position:relative;height:220px;border-radius:var(--r-card);overflow:hidden;background:var(--fill);box-shadow:inset 0 0 0 1px var(--line);margin:var(--sp4) 0}
+.map .ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--muted);font-size:.88rem;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:32px 32px;text-align:center;padding:0 var(--sp6)}
+.map iframe{position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none}
+.v.sel,.cell .v{-webkit-user-select:text;user-select:text}
+/* ドック */
+.edge{position:fixed;left:0;right:0;bottom:0;height:calc(150px + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,var(--bg) 75%);pointer-events:none;z-index:15}
+.dock{position:fixed;left:0;right:0;bottom:calc(var(--sp3) + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;gap:var(--sp3);padding:0 var(--sp5);z-index:20}
+.dots{position:fixed;left:0;right:0;bottom:calc(var(--sp3) + 68px + 4px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;z-index:19;pointer-events:none}
+.dots button{pointer-events:auto;width:44px;height:32px;display:grid;place-items:center}
+.dots i{width:6px;height:6px;border-radius:3px;background:var(--muted);opacity:.45;transition:width .35s var(--ease),opacity .25s,background .25s}
+.dots [aria-selected="true"] i{width:18px;opacity:1;background:var(--ink)}
+.tabs{position:relative;display:flex;padding:4px;width:min(260px,calc(100% - 76px));border-radius:36px;--i:0}
+.tabs .thumb{position:absolute;top:4px;bottom:4px;left:4px;width:calc((100% - 8px)/2);border-radius:32px;background:var(--thumb);box-shadow:inset 0 0 0 .5px var(--g-edge);transform:translateX(calc(var(--i)*100%));transition:transform .55s var(--ease)}
+.tabs button{position:relative;flex:1;height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--sp1);font-size:.7rem;font-weight:600;color:var(--muted);transition:color .25s}
+.tabs button[aria-current="page"]{color:var(--accent)}
+.fab{width:68px;height:68px;border-radius:50%;display:grid;place-items:center;background:var(--btn);color:var(--btntext);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 6px 22px rgba(0,0,0,.16)}
+/* メニュー・シート・アラート */
+.pscrim{position:fixed;inset:0;z-index:30}
+.menu{position:absolute;top:calc(100% + 8px);right:0;min-width:240px;border-radius:var(--r-grp);padding:var(--sp1);transform-origin:top right;animation:popm .35s var(--ease)}
+.menu button{width:100%;min-height:44px;display:flex;align-items:center;gap:var(--sp3);padding:0 var(--sp3);border-radius:16px;text-align:left}
+.menu button span{flex:1}.menu button:active{background:var(--fill)}.menu hr{border:0;height:1px;background:var(--line);margin:var(--sp1) var(--sp3)}
+@keyframes popm{from{opacity:0;transform:scale(.88)}}
+#layer{position:fixed;inset:0;z-index:40;pointer-events:none}#layer.in{pointer-events:auto}
+.scrim{position:absolute;inset:0;background:var(--scrim);opacity:0;transition:opacity .4s var(--ease)}#layer.in .scrim{opacity:1}
+.sheet{position:absolute;left:50%;bottom:0;width:min(560px,100%);max-height:calc(100% - env(safe-area-inset-top,0px) - 12px);overflow:auto;overscroll-behavior:contain;background:var(--bg);border-radius:32px 32px 0 0;box-shadow:0 -8px 32px rgba(0,0,0,.16),inset 0 1px 0 var(--line);padding:0 var(--sp5) calc(var(--sp6) + env(safe-area-inset-bottom,0px));transform:translate(-50%,100%);transition:transform .62s var(--ease)}
+#layer.in .sheet{transform:translate(-50%,0)}
+.drag{touch-action:none}.grab{width:36px;height:5px;border-radius:3px;background:var(--fill);margin:var(--sp2) auto 0}
+.sh{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:var(--sp3);padding:var(--sp3) 0 var(--sp4);position:sticky;top:0;background:var(--bg);z-index:2}
+.sh h2{margin:0;font-size:1.06rem;text-align:center}.sh .gbtn{width:44px;padding:0}
+.alert{position:fixed;inset:0;z-index:60;display:grid;place-items:center;pointer-events:none}.alert.in{pointer-events:auto}
+.ascrim{position:absolute;inset:0;background:var(--scrim);opacity:0;transition:opacity .3s}.alert.in .ascrim{opacity:1}
+.abox{position:relative;width:min(300px,calc(100% - 48px));border-radius:var(--r-grp);background:var(--surface);overflow:hidden;opacity:0;transform:scale(1.08);transition:opacity .25s,transform .35s var(--ease)}.alert.in .abox{opacity:1;transform:none}
+.at{padding:var(--sp5) var(--sp4) var(--sp4);text-align:center}.at b{display:block;font-size:1.02rem}.at p{margin:var(--sp1) 0 0;font-size:.82rem;color:var(--muted);line-height:1.4}
+.ab{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line)}.ab button{height:50px;font-size:1.02rem;color:var(--accent)}.ab button+button{border-left:1px solid var(--line);font-weight:700;color:var(--danger)}
+.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + var(--sp2));z-index:90;display:flex;align-items:center;gap:var(--sp2);height:44px;padding:0 var(--sp4);border-radius:22px;font-weight:600;font-size:.9rem;opacity:0;transform:translate(-50%,-24px) scale(.9);transition:opacity .3s,transform .5s var(--ease);pointer-events:none;max-width:calc(100% - 32px);white-space:nowrap}.toast.on{opacity:1;transform:translate(-50%,0)}
+/* フォーム・グループ */
+.gl{margin:var(--sp6) var(--sp4) var(--sp2);font-size:.82rem;color:var(--muted);font-weight:500}.gl:first-child{margin-top:0}
+.grp{background:var(--surface);border-radius:var(--r-grp);box-shadow:inset 0 0 0 1px var(--line);overflow:hidden}
+.cell{display:flex;align-items:center;justify-content:space-between;gap:var(--sp3);min-height:52px;padding:var(--sp2) var(--sp4);width:100%;text-align:left;text-decoration:none}
+.cell+.cell{position:relative}.cell+.cell:before{content:"";position:absolute;top:0;left:var(--sp4);right:0;height:1px;background:var(--line)}
+.cell input,.cell textarea{flex:1;min-width:0;border:0;background:none;outline:0;color:var(--ink);-webkit-user-select:text;user-select:text}.cell textarea{min-height:88px;resize:none;padding:var(--sp2) 0;line-height:1.4}
+.cell input[type=date]{flex:none;color-scheme:light dark}
+.cell .v{font-weight:600;text-align:right;overflow-wrap:anywhere}.cell.dg{color:var(--danger);justify-content:center;font-weight:500}.cell.ac{color:var(--accent)}
+.cell.ctr{justify-content:center;font-weight:500}.cell.col{flex-direction:column;align-items:stretch;padding:var(--sp3) var(--sp4)}
+.sw{display:grid;grid-template-columns:repeat(6,1fr);gap:var(--sp2)}.sw button{height:44px;border-radius:var(--r-chip);background:var(--g);display:grid;place-items:center;box-shadow:inset 0 0 0 1px var(--line);color:var(--ink);transition:box-shadow .25s}
+.sw button[aria-pressed="true"]{box-shadow:inset 0 0 0 3px var(--ink)}
+.em{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:var(--sp1)}
+.em button{height:44px;border-radius:12px;font-size:1.35rem;display:grid;place-items:center;color:var(--muted);box-shadow:inset 0 0 0 2px transparent;transition:box-shadow .25s}
+.em button[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--ink);background:var(--fill)}
+.err{display:flex;align-items:center;gap:var(--sp2);margin:var(--sp2) var(--sp4) 0;color:var(--danger);font-size:.82rem}
+.nb button[aria-pressed="true"]{box-shadow:inset 0 0 0 1px var(--line)}.em.nb button[aria-pressed="true"]{color:var(--ink)}
+.hero{position:relative;overflow:hidden;display:flex;flex-direction:column;gap:var(--sp4);padding:var(--sp6);border-radius:var(--r-card);background:var(--g);box-shadow:var(--sh1);margin-bottom:var(--sp4)}
+.hero>*{position:relative}
+.hero .head .chip{background:rgba(255,255,255,.55)}.hero .ttl{font-size:1.3rem;font-weight:700}.hero .cnt b{font-size:5rem}
+.note{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5}
+.foot{margin:var(--sp3) var(--sp4) 0;font-size:.8rem;color:var(--muted);line-height:1.5}
+/* 写真 */
+.cell>.seg{flex:1}
+.pic{display:block;flex:none;height:132px;margin:calc(-1*var(--sp5)) calc(-1*var(--sp5)) 0;background-size:cover;background-position:center}
+.hero .pic{height:168px;margin:calc(-1*var(--sp6)) calc(-1*var(--sp6)) 0}.pvb .pic{position:absolute;inset:0;width:100%;height:100%;margin:0}
+.pvb{position:relative;height:132px;border-radius:var(--r-chip);overflow:hidden;background:var(--g);display:grid;place-items:center;color:var(--muted);font-size:.88rem;box-shadow:inset 0 0 0 1px var(--line)}
+.tw .chip{color:#fff}.tk .chip{color:#1c1c1a}.sw button.tw{color:#fff}.sw button.tk{color:#1c1c1a}
+.card.feat.tw,.hero.tw{color:#fff}.card.feat.tk,.hero.tk{color:#1c1c1a}.card.feat.tw .dt{color:rgba(255,255,255,.9)}.card.feat.tk .dt{color:#1c1c1a}
+.card.feat.tw .chip,.hero.tw .chip{background:rgba(255,255,255,.24)!important}
+.card,.hero,.chip,.sw button,.pvb{--g:var(--w)}
+@supports (color:color-mix(in srgb,red,blue)){.btn,.fab,.gbtn.tint{background:linear-gradient(180deg,color-mix(in srgb,var(--btn),#fff 16%),var(--btn))}}
+/* スタンプ管理 */
+.sgt{display:flex;justify-content:flex-end;margin-bottom:var(--sp3)}
+.pillb{display:flex;align-items:center;gap:var(--sp2);height:36px;padding:0 var(--sp4);border-radius:18px;background:var(--fill);font-size:.88rem;font-weight:600}
+.pillb[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:var(--sp3)}
+.sgi{display:flex;flex-direction:column;gap:var(--sp2)}
+.stile{display:flex;flex-direction:column;align-items:center;gap:var(--sp2);padding:var(--sp4) var(--sp2);min-height:116px;border-radius:var(--r-grp);background:var(--surface);box-shadow:inset 0 0 0 1px var(--line),var(--sh0);transition:transform .3s var(--ease)}
+.stile:active{transform:scale(.96)}
+.stile .sn{font-weight:600;font-size:.88rem;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.stile .sc{font-size:.76rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.smv{display:flex;gap:var(--sp2);justify-content:center}.smv button{width:44px;height:36px;border-radius:12px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);display:grid;place-items:center}.smv button:disabled{opacity:.3}
+.sp{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:6px}
+.sp button{min-height:56px;border-radius:14px;box-shadow:inset 0 0 0 1px var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:1.3rem;padding:4px 2px;background-color:transparent;transition:box-shadow .45s var(--ease),background-color .45s var(--ease),color .3s,transform .5s var(--spring)}
+.sp em{font-style:normal;font-size:.7rem;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sp button[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--ink);background-color:var(--w);transform:scale(1.04)}.sp button.tw[aria-pressed="true"]{color:#fff}.sp button.tk[aria-pressed="true"]{color:#1c1c1a}.sp em{transition:color .3s}.sp button[aria-pressed="true"] em{color:inherit;opacity:.85}
+/* スタンプホイール */
+.wheel{position:fixed;inset:0;z-index:80;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.wsc{position:absolute;inset:0;background:var(--scrim);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:0;transition:opacity .28s}
+.wheel.in .wsc{opacity:1}.wheel.out{pointer-events:none}.wheel.out .wsc{opacity:0}
+.wd{position:absolute;border-radius:50%;transform:scale(.4);opacity:0;transition:transform .5s var(--spring),opacity .22s}
+.wheel.in .wd{transform:none;opacity:1}.wheel.out .wd{transform:scale(.82);opacity:0;transition-duration:.2s}
+.wi{position:absolute;left:50%;top:50%;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font-size:1.6rem;background:var(--thumb);box-shadow:inset 0 0 0 .5px var(--g-edge);transform:translate(-50%,-50%) translate(var(--x,0px),var(--y,0px)) scale(var(--s,1));transition:transform .32s var(--spring),background .2s;z-index:1}
+.wi[aria-selected="true"]{background:var(--w);box-shadow:inset 0 0 0 1px var(--g-hi),0 4px 14px rgba(0,0,0,.18)}
+.wi.tw[aria-selected="true"]{color:#fff}.wi.tk[aria-selected="true"]{color:#1c1c1a}
+.knob{position:absolute;left:50%;top:50%;width:80px;height:80px;border-radius:50%;background:var(--g-hi);opacity:0;transform:translate(-50%,-50%) translate(var(--x,0px),var(--y,0px));transition:transform .26s var(--ease),opacity .2s;box-shadow:inset 0 0 0 .5px var(--g-edge)}
+.hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:var(--hub);height:var(--hub);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;padding:8px;pointer-events:none;box-shadow:inset 0 0 0 .5px var(--g-edge)}
+.hub .hi{display:grid;place-items:center;height:36px}.hub b{font-size:.95rem}.hub small{font-size:.7rem;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (prefers-reduced-motion:reduce){.card:hover,.card:active{transform:none}*,*:before{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="bgfx" aria-hidden="true"><div class="bgl"></div><div class="bgl"></div></div>
+<div class="nav" id="nav"><div class="nav-in"><div class="nt" id="nt"></div><div class="na" id="na"></div></div></div>
+<div class="pager" id="pager"><div class="track" id="track">
+ <section class="pane" aria-label="月間カレンダー"><div class="app" id="cal"></div></section>
+ <section class="pane" aria-label="ホーム"><div class="app" id="home"><button class="rail" id="rail" aria-label="スタンプを付ける。長押し、またはEnterでスタンプ選択を開きます"></button><header class="lt"><p class="cap" id="cap"></p><h1 id="h1"></h1></header><main id="main"></main></div></section>
+ <section class="pane" aria-label="選択中の予定の場所"><div class="app" id="place"></div></section>
+</div></div>
+<div class="solo" id="setv" hidden><div class="app"><header class="lt"><p class="cap"></p><h1>設定</h1></header><div id="sbody"></div></div></div>
+<div class="edge"></div>
+<div class="dots" id="dots" role="tablist" aria-label="ページ"><button role="tab" data-pg="0" aria-label="月間カレンダー"><i></i></button><button role="tab" data-pg="1" aria-label="ホーム"><i></i></button><button role="tab" data-pg="2" aria-label="場所"><i></i></button></div>
+<div class="dock"><nav class="tabs glass" id="tabs" aria-label="メイン"><i class="thumb"></i><button data-tab="home"></button><button data-tab="set"></button></nav><button class="fab glass" data-act="new" aria-label="日付を追加"></button></div>
+<div id="pop"></div><div id="layer"></div><div class="toast glass" id="toast" role="status" aria-live="polite"></div>
+<div id="probe" aria-hidden="true" style="position:fixed;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)"></div>
+<script>
+const KEY="nichi-demo-v1",TKEY="nichi-demo-theme",SKEY="nichi-demo-sort",EASE="cubic-bezier(.32,.72,0,1)",RM=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const EMOJI=["🎧","🎂","🎤","✈️","🎓","📚","🎮","🎫","🌸","🎁","⚽️","❤️","🏖️","🎄","🎪","🐶"];
+const THEMES=[["lav","ラベンダー"],["lime","ライム"],["coral","コーラル"],["sky","スカイ"],["pink","ピンク"],["mint","ミント"],["peach","ピーチ"],["red","レッド","w"],["orange","オレンジ","k"],["yellow","イエロー","k"],["green","グリーン","w"],["teal","ティール","w"],["blue","ブルー","w"],["indigo","インディゴ","w"],["purple","パープル","w"],["rose","ローズ","w"],["brown","ブラウン","w"],["graphite","グラファイト","w"]];
+const STHEMES=[["sred", "レッド", "w"], ["sdorange", "ダークオレンジ", "w"], ["sorange", "オレンジ", "k"], ["syellow", "イエロー", "k"], ["sgreen", "グリーン", "k"], ["steal", "ティール", "k"], ["slblue", "ライトブルー", "k"], ["sblue", "ブルー", "w"], ["sdblue", "ダークブルー", "w"], ["sviolet", "バイオレット", "w"], ["spurple", "パープル", "w"], ["spink", "ピンク", "w"], ["sgray", "ダークグレー", "w"], ["staupe", "トープ", "k"]],SCOL={"sred": "#FF4351", "sdorange": "#FD6631", "sorange": "#FE9949", "syellow": "#FEC418", "sgreen": "#FFD426", "steal": "#19BD03", "slblue": "#55DAE1", "sblue": "#1B9AF7", "sdblue": "#3871DE", "sviolet": "#7B72E9", "spurple": "#DB49D8", "spink": "#ED4694", "sgray": "#000000", "staupe": "#B4B2A9"};Object.keys(SCOL).forEach(k=>document.documentElement.style.setProperty("--"+k,SCOL[k]));
+const OLD2S={lav:"sviolet",lime:"sgreen",coral:"sdorange",sky:"slblue",pink:"spink",mint:"steal",peach:"sorange",red:"sred",orange:"sdorange",yellow:"syellow",green:"steal",teal:"slblue",blue:"sblue",indigo:"sdblue",purple:"spurple",rose:"spink",brown:"staupe",graphite:"sgray"};
+const DST=[["live","ライブ","headphones","sviolet"],["bday","誕生日","cake","spink"],["trip","旅行","airplane","slblue"],["study","勉強","book","steal"],["school","学校","graduationcap","sgreen"],["love","大切","heart","sred"],["play","遊び","gamecontroller","sdblue"],["rest","お休み","sun","sorange"]];
+const DEMOIMG="data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><defs><radialGradient id="a" cx=".5" cy=".1" r=".9"><stop offset="0" stop-color="#ffd9f0"/><stop offset=".5" stop-color="#7a5cff"/><stop offset="1" stop-color="#1b1140"/></radialGradient></defs><rect width="400" height="300" fill="url(#a)"/><path d="M120 0 40 300h90zM280 0l80 300h-90z" fill="#fff" opacity=".18"/><circle cx="200" cy="230" r="46" fill="#fff" opacity=".25"/></svg>');
+const S={events:[],stamps:[],tab:"home",page:1,filter:"all",sort:"nearest",q:"",reorder:false,error:false,last:"",shown:"",guard:null,sel:null,day:"",cm:null,back:null,stR:false,wheel:false,bgKey:"",bgFront:0,detailId:null,stId:null,swAt:0};
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)],pad=n=>String(n).padStart(2,"0"),wait=ms=>new Promise(r=>setTimeout(r,RM?0:ms));
+const tc=k=>{const t=THEMES.find(x=>x[0]===k)||STHEMES.find(x=>x[0]===k);return t&&t[2]?" t"+t[2]:""};
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid=()=>crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random();
+const glen=s=>[...(typeof Intl!=="undefined"&&Intl.Segmenter?new Intl.Segmenter("ja",{granularity:"grapheme"}).segment(s):s)].length;
+const P={home:'<path d="M3.5 10.5 12 3.5l8.5 7V19a1.5 1.5 0 0 1-1.5 1.5h-4v-6h-6v6H5A1.5 1.5 0 0 1 3.5 19z"/>',plus:'<path d="M12 5v14M5 12h14"/>',gear:'<path d="M4 7h8M16 7h4M4 17h3M11 17h9"/><circle cx="14" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',x:'<path d="m6 6 12 12M18 6 6 18"/>',search:'<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/>',sort:'<path d="M8 19V5M4.5 8.5 8 5l3.5 3.5M16 5v14M12.5 15.5 16 19l3.5-3.5"/>',check:'<path d="m5 12.5 4.5 4.5L19 7.5"/>',pencil:'<path d="M4.5 19.5 5.5 15 15.5 5a2.1 2.1 0 0 1 3 3L8.5 18z"/>',cal:'<rect x="4" y="5" width="16" height="15" rx="3.5"/><path d="M4 10h16M8.5 3v4M15.5 3v4"/>',warn:'<path d="M12 4 2.8 19.5h18.4zM12 10v4.5M12 17.2v.1"/>',up:'<path d="m6 15 6-6 6 6"/>',down:'<path d="m6 9 6 6 6-6"/>',hand:'<path d="M5 8h14M5 12h14M5 16h14"/>',left:'<path d="m15 5-7 7 7 7"/>',right:'<path d="m9 5 7 7-7 7"/>',pin:'<path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/>',stamp:'<path d="M9 14.5h6l1.5 5h-9zM12 4a3 3 0 0 1 1.5 5.6v4.9h-3V9.6A3 3 0 0 1 12 4z"/>'};
+P.cale='<rect x="3.5" y="5" width="17" height="15.5" rx="3.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>';P.mag='<circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/>';P.tri='<path d="M12 4.2 21 19.5H3z"/><path d="M12 10v4.5M12 17.2v.01"/>';
+const SYM={"headphones": "<path d=\"M4 15v-3a8 8 0 0 1 16 0v3\"/><rect x=\"3.5\" y=\"14\" width=\"4\" height=\"6\" rx=\"1.8\"/><rect x=\"16.5\" y=\"14\" width=\"4\" height=\"6\" rx=\"1.8\"/>", "cake": "<path d=\"M4 20h16M5 20v-6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v6M5 16c2 1.4 3 1.4 5 0s3-1.4 5 0 3 1.2 4 .3M12 12V9M12 4.6c.9 1 .9 2.1 0 2.9-.9-.8-.9-1.9 0-2.9z\"/>", "airplane": "<path d=\"M21 12.5 14 9V4.5a2 2 0 0 0-4 0V9l-7 3.5V15l7-1.8V18l-2 1.5V21l4-1 4 1v-1.5L14 18v-4.8l7 1.8z\"/>", "book": "<path d=\"M12 6.5C10 5 7 4.5 4 5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V5c-3-.5-6 0-8 1.5zM12 6.5v13\"/>", "graduationcap": "<path d=\"M2.5 9.5 12 5l9.5 4.5L12 14zM6.5 11.5V16c0 1.5 2.5 3 5.5 3s5.5-1.5 5.5-3v-4.5M21.5 9.5V15\"/>", "heart": "<path d=\"M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.5 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z\"/>", "gamecontroller": "<path d=\"M7.5 7h9a4.5 4.5 0 0 1 4.4 3.6l.9 4.4a2.6 2.6 0 0 1-4.5 2.1L15 15H9l-2.3 2.1A2.6 2.6 0 0 1 2.2 15l.9-4.4A4.5 4.5 0 0 1 7.5 7zM8 9.5v3M6.5 11h3M16 10.5v.01M18 12.5v.01\"/>", "sun": "<circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4\"/>", "gift": "<rect x=\"4\" y=\"10\" width=\"16\" height=\"10\" rx=\"2.5\"/><path d=\"M3 10h18M12 10v10M12 10c-1-3.5-5-3.5-4.5-1.2.3 1.2 2.7 1.2 4.5 1.2zM12 10c1-3.5 5-3.5 4.5-1.2-.3 1.2-2.7 1.2-4.5 1.2z\"/>", "star": "<path d=\"m12 4 2.4 5 5.4.7-4 3.8 1 5.4L12 16.2 7.2 18.9l1-5.4-4-3.8 5.4-.7z\"/>", "ticket": "<path d=\"M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4zM14 6v12\"/>", "flower": "<circle cx=\"12\" cy=\"12\" r=\"2.2\"/><path d=\"M12 9.8c-2-3-1-5.5 0-5.8 1 .3 2 2.8 0 5.8zM12 14.2c2 3 1 5.5 0 5.8-1-.3-2-2.8 0-5.8zM9.8 12c-3-2-5.5-1-5.8 0 .3 1 2.8 2 5.8 0zM14.2 12c3 2 5.5 1 5.8 0-.3-1-2.8-2-5.8 0z\"/>", "ball": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"m12 8 3.5 2.5-1.3 4H9.8l-1.3-4zM12 8V3.5M15.5 10.5l4-1.3M14.2 14.5l2.6 3.3M9.8 14.5l-2.6 3.3M8.5 10.5l-4-1.3\"/>", "bell": "<path d=\"M6 17v-6a6 6 0 0 1 12 0v6l1.5 2h-15zM10 21h4\"/>", "house": "<path d=\"M3.5 10.5 12 3.5l8.5 7V19a1.5 1.5 0 0 1-1.5 1.5h-4v-6h-6v6H5A1.5 1.5 0 0 1 3.5 19z\"/>", "briefcase": "<rect x=\"3.5\" y=\"7.5\" width=\"17\" height=\"12\" rx=\"2.5\"/><path d=\"M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5M3.5 13h17\"/>", "fork": "<path d=\"M7 3v7a2 2 0 0 0 4 0V3M9 3v18M17 3c-2 2-2.500 5-2.500 8H17v10\"/>", "paw": "<ellipse cx=\"8\" cy=\"9\" rx=\"1.6\" ry=\"2.2\"/><ellipse cx=\"16\" cy=\"9\" rx=\"1.6\" ry=\"2.2\"/><ellipse cx=\"4.8\" cy=\"13\" rx=\"1.4\" ry=\"1.9\"/><ellipse cx=\"19.2\" cy=\"13\" rx=\"1.4\" ry=\"1.9\"/><path d=\"M12 12c-3 0-5 3-5 5 0 1.8 1.5 2.5 3 2 1.2-.4 1.8-.4 4 0 1.5.5 3-.2 3-2 0-2-2-5-5-5z\"/>", "music": "<path d=\"M9 18V6l10-2v12M9 18a2.500 2.500 0 1 1-2.500-2.500A2.500 2.500 0 0 1 9 18zM19 16a2.500 2.500 0 1 1-2.500-2.500A2.500 2.500 0 0 1 19 16z\"/>"},SYMLBL={"headphones": "ヘッドホン", "cake": "ケーキ", "airplane": "飛行機", "book": "本", "graduationcap": "学帽", "heart": "ハート", "gamecontroller": "ゲーム", "sun": "太陽", "gift": "ギフト", "star": "星", "ticket": "チケット", "flower": "花", "ball": "ボール", "bell": "ベル", "house": "家", "briefcase": "かばん", "fork": "食事", "paw": "肉球", "music": "音符"},SYMK=Object.keys(SYM);SYMK.forEach(k=>P["s:"+k]=SYM[k]);
+const I=(n,s=22)=>`<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
+const SI=(k,s=24)=>I(SYM[k]?"s:"+k:"s:star",s);
+/* ── 日付ロジック：暦日を UTC 0 時の整数日にして引く（時刻・夏時間・端末のタイムゾーンに依存しない） ── */
+function parse(s){const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||"");if(!m)return null;const y=+m[1],mo=+m[2],d=+m[3];if(y<1900||y>2200)return null;const t=new Date(Date.UTC(y,mo-1,d));if(t.getUTCMonth()!==mo-1||t.getUTCDate()!==d)return null;return{y,mo,d,n:t.getTime()/864e5}}
+const todayISO=()=>{const t=new Date();return`${t.getFullYear()}-${pad(t.getMonth()+1)}-${pad(t.getDate())}`};
+const diff=s=>parse(s).n-parse(todayISO()).n;
+const shift=(s,k)=>{const t=new Date((parse(s).n+k)*864e5);return`${t.getUTCFullYear()}-${pad(t.getUTCMonth()+1)}-${pad(t.getUTCDate())}`};
+const grp=n=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g,",");
+const cnt=n=>n>0?{p:"あと",v:grp(n),s:"日",say:`あと${n}日`,ph:`あと ${grp(n)} 日`}:n===0?{p:"",v:"今日",s:"",say:"今日",ph:"今日"}:{p:"",v:grp(-n),s:"日経過",say:`${-n}日経過`,ph:`${grp(-n)} 日経過`};
+const fmt=(s,w)=>{const p=parse(s);return new Date(p.y,p.mo-1,p.d).toLocaleDateString("ja-JP",{year:"numeric",month:"long",day:"numeric",weekday:w?"long":"short"})};
+const dayTitle=s=>{const p=parse(s);return new Date(p.y,p.mo-1,p.d).toLocaleDateString("ja-JP",{month:"long",day:"numeric",weekday:"short"})};
+const ymNow=()=>{const p=parse(todayISO());return{y:p.y,m:p.mo}};
+/* ── 共通：いちばん近い予定（背景・特大カード・フォールバックが同じ関数を参照） ── */
+function nearest(){const a=S.events.map(e=>({e,n:diff(e.date)}));
+ const up=a.filter(x=>x.n>=0).sort((x,y)=>x.n-y.n||x.e.order-y.e.order)[0];if(up)return{...up,past:false};
+ const pa=a.filter(x=>x.n<0).sort((x,y)=>y.n-x.n||x.e.order-y.e.order)[0];return pa?{...pa,past:true}:null}
+const selEv=()=>S.events.find(e=>e.id===S.sel)||(nearest()||{}).e||null;
+const stOf=id=>S.stamps.find(s=>s.id===id),useCount=id=>S.events.filter(e=>e.stampId===id).length;
+const fix=()=>{if(S.sel&&!S.events.some(e=>e.id===S.sel))S.sel=null};
+/* ── 保存（v2: events + stamps。v1 は読み込み時に移行） ── */
+const EMO2SYM={"🎧":"headphones","🎂":"cake","✈":"airplane","🎓":"graduationcap","📚":"book","🎮":"gamecontroller","🎫":"ticket","🌸":"flower","🎁":"gift","⚽":"ball","❤":"heart","🏖":"sun","🎄":"star","🎪":"star","🐶":"paw","⭐":"star","🍜":"fork","💼":"briefcase","🏠":"house","🎤":"music"},symKey=v=>{v=String(v||"").replace(/️/g,"");return SYM[v]?v:EMO2SYM[v]||"star"};
+const normStamp=s=>({id:String(s.id),name:String(s.name).slice(0,12),icon:symKey(s.icon),theme:STHEMES.some(t=>t[0]===s.theme)?s.theme:OLD2S[s.theme]||"sviolet"});
+const normPlace=p=>({name:String(p&&p.name||"").slice(0,60),address:String(p&&p.address||"").slice(0,120)});
+const defStamps=()=>DST.map(a=>({id:a[0],name:a[1],icon:a[2],theme:a[3]}));
+function save(l,st){try{localStorage.setItem(KEY,JSON.stringify({v:2,events:l,stamps:st||S.stamps}));return true}catch(e){toast("保存できませんでした","warn");return false}}
+function load(){let raw=null;try{raw=localStorage.getItem(KEY)}catch(e){}
+ if(raw===null){S.stamps=defStamps();S.events=seed();save(S.events,S.stamps);return}
+ try{const o=JSON.parse(raw);if(!o||!Array.isArray(o.events))throw 0;
+  S.stamps=Array.isArray(o.stamps)?o.stamps.filter(s=>s&&s.id&&s.name).map(normStamp):defStamps();const ids=new Set(S.stamps.map(s=>s.id));
+  S.events=o.events.filter(e=>e&&e.title&&parse(e.date)).map((e,i)=>({id:e.id||uid(),title:String(e.title).slice(0,40),date:e.date,theme:THEMES.some(t=>t[0]===e.theme)?e.theme:"lav",symbol:e.symbol||"",note:String(e.note||"").slice(0,500),img:typeof e.img==="string"&&e.img.startsWith("data:image/")?e.img:"",order:Number.isFinite(e.order)?e.order:i,place:normPlace(e.place),stampId:ids.has(e.stampId)?e.stampId:""}))}catch(e){S.error=true;S.events=[];S.stamps=defStamps()}}
+function seed(){const t=todayISO();return[["次のライブ",19,"lav","🎧","好きな曲をぜんぶ聴く。","live",{name:"サンプルホール",address:"大阪府大阪市北区梅田1丁目"}],["親友の誕生日",7,"coral","🎂","プレゼントを忘れずに。","bday",null],["冬休み",59,"lime","🧣","","rest",null],["期末テスト最終日",0,"sky","📚","","study",null],["文化祭",-8,"sky","🎪","今年もいい思い出。","school",null],["はじめての一人旅",-120,"lime","✈️","","trip",{name:"京都駅",address:"京都府京都市下京区烏丸通塩小路下る"}]].map((a,i)=>({id:uid(),title:a[0],date:shift(t,a[1]),theme:a[2],symbol:a[3],note:a[4],stampId:a[5],place:normPlace(a[6]),img:i===0?DEMOIMG:"",order:i}))}
+function commit(l,st){const E=l||S.events,T=st||S.stamps;if(!save(E,T))return false;S.events=E;S.stamps=T;fix();refresh();return true}
+let tt;function toast(m,ic="check"){const el=$("#toast");el.innerHTML=`${I(ic,20)}<span>${esc(m)}</span>`;el.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>el.classList.remove("on"),2200)}
+/* 選択（ホーム・カレンダー・場所で共有） */
+function select(id){const e=S.events.find(x=>x.id===id);if(!e)return;S.sel=id;S.day=e.date;const p=parse(e.date);S.cm={y:p.y,m:p.mo};refresh()}
+function applyStamp(id,sid){return commit(S.events.map(e=>e.id===id?{...e,stampId:sid}:e))}
+/* ── FLIP ── */
+function flip(fn){const f=new Map($$("#list [data-id]").map(e=>[e.dataset.id,e.getBoundingClientRect()]));fn();if(RM)return;$$("#list [data-id]").forEach(e=>{const a=f.get(e.dataset.id);if(a){const dy=a.top-e.getBoundingClientRect().top;if(Math.abs(dy)>1)e.animate([{transform:`translateY(${dy}px)`},{transform:"none"}],{duration:520,easing:EASE})}else e.animate([{opacity:0,transform:"scale(.94)"},{opacity:1,transform:"none"}],{duration:420,easing:EASE})})}
+const HC=new WeakMap(),put=(el,h)=>{if(!el||HC.get(el)===h)return;HC.set(el,h);el.innerHTML=h};
+/* ── 一覧 ── */
+const norm=s=>String(s).normalize("NFKC").toLowerCase(),canMove=()=>S.sort==="manual"&&S.filter==="all"&&!S.q.trim();
+function groups(){const q=norm(S.q).split(/\s+/).filter(Boolean);
+ const it=S.events.map(e=>({e,n:diff(e.date)})).filter(x=>S.filter==="all"||(S.filter==="up"?x.n>=0:x.n<0)).filter(x=>{const h=norm(x.e.title+"\n"+x.e.note);return q.every(t=>h.includes(t))});
+ if(S.sort==="manual")return it.length?[{items:it.sort((a,b)=>a.e.order-b.e.order)}]:[];
+ const b={soon:[],later:[],past:[]},o=(a,c)=>a.e.order-c.e.order;it.forEach(x=>b[x.n<0?"past":x.n<=30?"soon":"later"].push(x));
+ b.soon.sort((a,c)=>a.n-c.n||o(a,c));b.later.sort((a,c)=>a.n-c.n||o(a,c));b.past.sort((a,c)=>c.n-a.n||o(a,c));
+ return[["soon","もうすぐ"],["later","その先"],["past","過ぎた日"]].filter(([k])=>b[k].length).map(([k,t])=>({title:t,items:b[k]}))}
+const bg=e=>e.img?`<i class="pic" style="background-image:url('${esc(e.img)}')"></i>`:"";
+function shrink(f,max=900){return new Promise((ok,no)=>{const fr=new FileReader();fr.onerror=no;fr.onload=()=>{const im=new Image();im.onerror=no;im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);ok(c.toDataURL("image/jpeg",.78))};im.src=fr.result};fr.readAsDataURL(f)})}
+const hasPlace=e=>!!(e.place&&(e.place.name||e.place.address));
+function card(x,feat){const e=x.e,c=cnt(x.n),s=stOf(e.stampId),on=(selEv()||{}).id===e.id;
+ return`<button class="card${feat?" feat":""}${e.img?" img":""}${on?" sel":""}${tc(e.theme)}" style="--w:var(--${e.theme})" data-open="${e.id}" aria-label="${esc(`${e.title}、${c.say}、${fmt(e.date,1)}${s?"、スタンプ"+s.name:""}${hasPlace(e)?"、場所あり":""}`)}"${on?' aria-current="true"':""}>${bg(e)}<span class="head"><span class="chip" aria-hidden="true">${(s?SI(s.icon):esc(e.symbol))||I("cal",24)}</span><span class="ttl">${feat?"<small>次の日付</small>":""}${esc(e.title)}</span></span><span class="cnt" aria-hidden="true">${c.p?`<span>${c.p}</span>`:""}<b>${c.v}</b>${c.s?`<span>${c.s}</span>`:""}</span><span class="dt" aria-hidden="true">${I("cal",16)}${fmt(e.date)}${s?` · ${esc(s.name)}`:""}${hasPlace(e)?I("pin",16):""}</span></button>`}
+function renderList(){const el=$("#list");if(!el)return;const g=groups(),can=canMove()&&S.reorder;
+ const nn=nearest(),next=S.sort==="nearest"&&nn&&!nn.past?nn:null;let h="";
+ if(!g.length){const sr=S.q.trim();h=`<div class="empty"><div class="ico" aria-hidden="true">${I(sr?"mag":"cale",56)}</div><h3>${sr?"結果なし":S.filter==="past"?"過ぎた日なし":"これからの日付なし"}</h3><p>${sr?`“${esc(sr.slice(0,30))}”に一致する日付はありません。`:S.filter==="past"?"日付が過ぎると、ここに表示されます。":"「すべて」に切り替えると、ほかの日付が表示されます。"}</p></div>`}
+ g.forEach(gr=>{if(gr.title)h+=`<h2 class="sec">${gr.title}</h2>`;gr.items.forEach((x,i)=>{h+=`<div class="row" data-id="${x.e.id}">${card(x,next&&next.e.id===x.e.id)}${can?`<div class="mv"><button data-mv="${x.e.id}:-1" aria-label="${esc(x.e.title)}を上へ" ${i?"":"disabled"}>${I("up",20)}</button><button data-mv="${x.e.id}:1" aria-label="${esc(x.e.title)}を下へ" ${i===gr.items.length-1?"disabled":""}>${I("down",20)}</button></div>`:""}</div>`})});
+ el.innerHTML=h}
+const seg=(a,cur,at,lb)=>`<div class="seg" style="--n:${a.length};--i:${Math.max(0,a.findIndex(x=>x[0]===cur))}" role="group" aria-label="${lb}"><i class="thumb"></i>${a.map(([k,t])=>`<button type="button" data-${at}="${k}" aria-pressed="${k===cur}">${t}</button>`).join("")}</div>`;
+const setSeg=b=>{const s=b.closest(".seg"),bs=$$("button",s);bs.forEach(x=>x.setAttribute("aria-pressed",String(x===b)));s.style.setProperty("--i",bs.indexOf(b))};
+const mode=()=>S.error?"error":S.events.length?"list":"empty";
+function renderHome(){S.shown=mode();const m=$("#main");
+ if(S.shown==="error")m.innerHTML=`<div class="empty"><div class="ico" aria-hidden="true">${I("tri",56)}</div><h3>読み込めません</h3><p>保存されたデータを読み込めませんでした。空の状態から始めることができます。</p><button class="btn" data-act="reset">空の状態から始める</button></div>`;
+ else if(S.shown==="empty")m.innerHTML=`<div class="empty"><div class="ico" aria-hidden="true">${I("cale",56)}</div><h3>日付なし</h3><p>待ち遠しい日や、大切な記念日を追加します。</p><button class="btn" data-act="new">日付を追加</button></div>`;
+ else{m.innerHTML=seg([["all","すべて"],["up","これから"],["past","過ぎた日"]],S.filter,"filter","表示")+`<label class="search">${I("search",20)}<input id="q" type="search" placeholder="タイトルやメモを検索" aria-label="検索" value="${esc(S.q)}"></label><div id="list"></div>`;renderList()}
+ renderNav()}
+/* ── カレンダー（左） ── */
+function renderCal(){const el=$("#cal");if(!el)return;if(!S.cm)S.cm=ymNow();if(!S.day)S.day=todayISO();
+ const {y,m}=S.cm,wd=new Date(Date.UTC(y,m-1,1)).getUTCDay(),dim=new Date(Date.UTC(y,m,0)).getUTCDate(),t=todayISO(),by={};
+ S.events.forEach(e=>(by[e.date]||(by[e.date]=[])).push(e));
+ let cells="";for(let i=0;i<wd;i++)cells+=`<span class="dc out"></span>`;
+ for(let d=1;d<=dim;d++){const iso=`${y}-${pad(m)}-${pad(d)}`,ev=by[iso]||[];cells+=`<button class="dc${iso===t?" today":""}" data-day="${iso}" aria-pressed="${iso===S.day}" aria-label="${m}月${d}日${ev.length?`、予定${ev.length}件`:""}${iso===t?"、今日":""}"><b>${d}</b><span class="mk">${ev.slice(0,3).map(e=>`<i style="--w:var(--${e.theme})"></i>`).join("")}</span></button>`}
+ const lst=(by[S.day]||[]).slice().sort((a,b)=>a.order-b.order).map(e=>({e,n:diff(e.date)}));
+ el.innerHTML=`<header class="lt"><div class="lrow"><div><p class="cap">月間カレンダー</p><h1>${y}年${m}月</h1></div><div class="mn"><button class="gbtn glass" data-cal="-1" aria-label="前の月">${I("left",20)}</button><button class="gbtn glass" data-cal="1" aria-label="次の月">${I("right",20)}</button></div></div></header><div class="cal"><div class="wk" aria-hidden="true">${"日月火水木金土".split("").map(c=>`<span>${c}</span>`).join("")}</div><div class="cg">${cells}</div></div><h2 class="sec" style="margin-bottom:var(--sp3)">${dayTitle(S.day)}</h2>${lst.length?`<div id="clist" style="display:flex;flex-direction:column;gap:var(--sp3)">${lst.map(x=>`<div class="row" data-cid="${x.e.id}">${card(x,false)}</div>`).join("")}</div>`:`<div class="empty sm"><div class="ico" aria-hidden="true">${I("cale",40)}</div><h3>予定なし</h3><p>この日の予定はありません。</p><button class="btn" data-act="new">この日に追加</button></div>`}`}
+/* ── 場所（右） ── */
+function renderPlace(){const el=$("#place");if(!el)return;const e=selEv();let h=`<header class="lt"><p class="cap">選択中の予定</p><h1>場所</h1></header>`;
+ if(!e)h+=`<div class="empty"><div class="ico" aria-hidden="true">${I("pin",56)}</div><h3>予定なし</h3><p>日付を追加すると、場所を登録できます。</p><button class="btn" data-act="new">日付を追加</button></div>`;
+ else{h+=`<div class="row">${card({e,n:diff(e.date)},false)}</div>`;
+  if(hasPlace(e)){const pl=e.place,label=pl.name||pl.address,q=encodeURIComponent(pl.address||pl.name);
+   h+=`<p class="gl" style="margin-top:var(--sp6)">場所</p><div class="grp">${pl.name?`<div class="cell"><span>名称</span><span class="v">${esc(pl.name)}</span></div>`:""}${pl.address?`<div class="cell"><span>住所</span><span class="v">${esc(pl.address)}</span></div>`:""}</div><div class="map" role="img" aria-label="${esc(label)}の地図プレビュー"><div class="ph">${I("pin",36)}<span>${esc(label)}</span></div>${S.page===2?`<iframe title="地図" loading="lazy" referrerpolicy="no-referrer" src="https://maps.google.com/maps?q=${q}&z=15&output=embed&hl=ja"></iframe>`:""}</div><div class="grp"><a class="cell ac" href="https://maps.apple.com/?q=${q}" target="_blank" rel="noopener"><span>マップアプリで開く</span>${I("pin",20)}</a><button class="cell ac" data-act="place-edit"><span>場所を編集</span>${I("pencil",20)}</button></div>`}
+  else h+=`<div class="empty"><div class="ico" aria-hidden="true">${I("pin",56)}</div><h3>場所が未登録です</h3><p>「${esc(e.title)}」の場所を追加すると、住所と地図がここに表示されます。</p><button class="btn" data-act="place-edit">場所を追加</button></div>`}
+ put(el,h)}
+/* ── 背景：いちばん近い予定のテーマ色。切り替えは 0.7 秒のクロスフェード ── */
+const CM=typeof CSS!=="undefined"&&CSS.supports&&CSS.supports("color","color-mix(in srgb,red,blue)");
+function renderBg(){const n=nearest(),key=n?n.e.theme+(n.past?"-past":""):"none";if(key===S.bgKey)return;S.bgKey=key;
+ const L=$$(".bgl"),nx=S.bgFront===0?1:0,old=S.bgFront;let bgc="none";
+ if(n&&CM){const t=n.e.theme,sat=!!(THEMES.find(x=>x[0]===t)||[])[2],k=n.past?.55:1,a=Math.round((sat?42:85)*k),b=Math.round((sat?14:30)*k);
+  bgc=`linear-gradient(180deg,color-mix(in srgb,var(--${t}) ${a}%,var(--bg)) 0%,color-mix(in srgb,var(--${t}) ${b}%,var(--bg)) 38%,var(--bg) 78%)`}
+ L[nx].style.backgroundImage=bgc;L[nx].style.zIndex=2;L[old].style.zIndex=1;L[nx].classList.add("on");
+ setTimeout(()=>{if(S.bgFront===nx)L[old].classList.remove("on")},RM?0:800);S.bgFront=nx}
+/* ── ナビ・ヘッダー ── */
+function navTitle(){if(S.tab!=="home")return"設定";if(S.page===0){const c=S.cm||ymNow();return`${c.y}年${c.m}月`}if(S.page===2)return"場所";const p=parse(todayISO());return new Date(p.y,p.mo-1,p.d).toLocaleDateString("ja-JP",{month:"long",day:"numeric",weekday:"short"})}
+function renderNav(){const a=$("#na");let h="";
+ if(S.tab==="home"){if(S.page===1&&S.shown==="list")h=S.reorder?`<button class="gbtn pill glass" data-act="reorder">完了</button>`:`<button class="gbtn glass" data-act="menu" aria-label="並べ替えとスタンプ" aria-haspopup="menu">${I("sort",20)}</button>`;
+  else if(S.page===0)h=`<button class="gbtn pill glass" data-act="today">今日</button>`;
+  else if(S.page===2&&selEv())h=`<button class="gbtn glass" data-act="place-edit" aria-label="場所を編集">${I("pencil",20)}</button>`}
+ a.innerHTML=h;$("#nt").textContent=navTitle()}
+function countUp(b){const n=+b.textContent,t0=performance.now();b.textContent="0";const f=t=>{const k=Math.min(1,(t-t0)/800);b.textContent=Math.round(n*(1-Math.pow(1-k,4)));if(k<1)requestAnimationFrame(f)};requestAnimationFrame(f)}
+function enter(){if(RM)return;$$("#list .card").forEach((c,i)=>{c.animate([{opacity:0,transform:"translateY(18px) scale(.97)"},{opacity:1,transform:"none"}],{duration:640,delay:80+Math.min(i,8)*55,easing:EASE,fill:"backwards"});const b=$(".cnt b",c);if(b&&/^\d+$/.test(b.textContent))countUp(b)})}
+const HD={t:null};
+function setHead(t,cap){const h=$("#h1"),c=$("#cap"),o=HD.t;c.textContent=cap;if(o===t)return;HD.t=t;h.removeAttribute("aria-label");
+ const rise=[{opacity:0,transform:"translateY(.4em)"},{opacity:1,transform:"none"}];
+ if(RM){h.textContent=t;return}
+ if(o===null){h.textContent=t;h.animate(rise,{duration:560,easing:EASE,fill:"backwards"});c.animate(rise,{duration:560,delay:60,easing:EASE,fill:"backwards"});return}
+ const a=[...o];h.textContent="";h.setAttribute("aria-label",t);
+ [...t].forEach((ch,i)=>{const e=document.createElement("span");e.className="dg";e.setAttribute("aria-hidden","true");e.textContent=ch;h.append(e);if(ch!==a[i])e.animate(rise,{duration:520,delay:140+i*24,easing:EASE,fill:"backwards"})});
+ const g=document.createElement("span");g.className="old";g.setAttribute("aria-hidden","true");g.textContent=o;h.append(g);
+ g.animate([{opacity:1,transform:"none"},{opacity:0,transform:"translateY(-.3em)"}],{duration:240,easing:EASE,fill:"forwards"}).onfinish=()=>g.remove()}
+const pg=$("#pager"),tr=$("#track"),sv=$("#setv"),panes=()=>$$(".pane",pg);
+const navP=()=>{const sc=S.tab==="home"?panes()[S.page]:sv;$("#nav").style.setProperty("--p",Math.min(1,Math.max(0,((sc?sc.scrollTop:0)-34)/28)))};
+function renderTab(){const home=S.tab==="home";closeWheel(true);pg.hidden=!home;sv.hidden=home;$("#dots").hidden=!home;
+ const p=parse(todayISO()),t=new Date(p.y,p.mo-1,p.d).toLocaleDateString("ja-JP",{month:"long",day:"numeric",weekday:"short"});
+ setHead(t,"今日");
+ $$("#tabs [data-tab]").forEach(b=>{b.innerHTML=I(b.dataset.tab==="home"?"home":"gear",24)+(b.dataset.tab==="home"?"ホーム":"設定");b.dataset.tab===S.tab?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current")});
+ $("#tabs").style.setProperty("--i",home?0:1);$(".fab").innerHTML=I("plus",28);
+ if(home){renderHome();renderCal();renderPlace();layoutPager(false);syncPane();panes().forEach(x=>x.scrollTop=0);enter()}else{renderSettings();sv.scrollTop=0}
+ renderBg();renderNav();navP();
+ if(!RM)(home?panes()[S.page]:sv).animate([{opacity:0,transform:"translateY(10px)"},{opacity:1,transform:"none"}],{duration:420,easing:EASE})}
+function refresh(){S.last=todayISO();fix();if(mode()!==S.shown)renderHome();else flip(renderList);renderCal();renderPlace();renderBg();if(S.tab==="set")renderSettings();renderNav()}
+function renderSettings(){const th=(()=>{try{return localStorage.getItem(TKEY)||"system"}catch(e){return"system"}})();
+ $("#sbody").innerHTML=`<p class="gl">外観</p><div class="grp"><div class="cell">${seg([["system","自動"],["light","ライト"],["dark","ダーク"]],th,"tmode","外観")}</div></div><p class="gl">並べ替え</p><div class="grp"><div class="cell">${seg([["nearest","近い順"],["manual","手動"]],S.sort,"sortset","並べ替え")}</div></div><p class="gl">スタンプ</p><div class="grp"><button class="cell" data-act="stamps"><span>スタンプを管理</span><span class="v">${I("right",18)}</span></button></div><p class="gl">データ</p><div class="grp"><button class="cell ac ctr" data-act="seed">サンプルに戻す</button><button class="cell dg" data-act="wipe">日付をすべて削除</button></div><p class="foot">日付とスタンプは、このブラウザの中だけに保存されます。アカウント登録も、データの送信もありません。</p><p class="gl">このデモについて</p><p class="foot" style="margin-top:0">ブラウザで動く操作デモです。通知とウィジェットはiOSアプリで提供します。ガラス表現はWeb上の近似で、OS標準のLiquid Glassとは異なります。地図プレビューはオンライン時のみ表示されます。</p>`;
+ $$(".cell .seg").forEach(s=>{s.parentElement.style.padding="var(--sp2) var(--sp3)";s.style.flex="1"})}
+/* ── 3 画面ページャー ── */
+function layoutPager(anim){tr.style.transition=anim&&!RM?"transform .46s cubic-bezier(.22,1.12,.36,1)":"none";tr.style.transform=`translate3d(${-S.page*pg.clientWidth}px,0,0)`}
+function syncPane(){panes().forEach((p,i)=>{p.inert=i!==S.page;p.setAttribute("aria-hidden",String(i!==S.page))});$$("#dots button").forEach(b=>b.setAttribute("aria-selected",String(+b.dataset.pg===S.page)));if(S.page===2)renderPlace();renderNav();navP()}
+function go(i){i=Math.max(0,Math.min(2,i));closeWheel(true);closeMenu();S.page=i;layoutPager(true);syncPane()}
+let sw=null,lp=null;
+const blank=t=>!t.closest(".card,.mv,.seg,.search,.gbtn,.btn,input,textarea,a,.cell")&&(!!t.closest("#rail")||!t.closest("button"));
+function lpCancel(){if(lp){clearTimeout(lp.tm);lp=null}}
+pg.addEventListener("pointerdown",e=>{if(S.tab!=="home"||S.wheel||(e.pointerType==="mouse"&&e.button!==0)||e.target.closest("input,textarea"))return;
+ sw={id:e.pointerId,x:e.clientX,y:e.clientY,lock:false,px:e.clientX,pt:e.timeStamp,v:0};
+ if(S.page===1&&S.shown!=="error"&&blank(e.target)){const x=e.clientX,y=e.clientY,id=e.pointerId;lp={x,y,tm:setTimeout(()=>{lp=null;openWheel(x,y,id,false)},420)}}});
+pg.addEventListener("pointermove",e=>{if(S.wheel||!sw||e.pointerId!==sw.id)return;const dx=e.clientX-sw.x,dy=e.clientY-sw.y;
+ if(lp&&Math.hypot(dx,dy)>9)lpCancel();
+ if(!sw.lock){if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)*1.6){sw.lock=true;lpCancel();try{pg.setPointerCapture(e.pointerId)}catch(x){}tr.style.transition="none"}else return}
+ const dt=e.timeStamp-sw.pt;if(dt>0)sw.v=(e.clientX-sw.px)/dt;sw.px=e.clientX;sw.pt=e.timeStamp;
+ const W=pg.clientWidth;let off=dx;if((S.page===0&&dx>0)||(S.page===2&&dx<0))off=dx*.28;off=Math.max(-W,Math.min(W,off));
+ tr.style.transform=`translate3d(${-S.page*W+off}px,0,0)`});
+function swEnd(e,cancel){lpCancel();if(!sw||e.pointerId!==sw.id)return;const s=sw;sw=null;if(!s.lock||S.wheel)return;S.swAt=performance.now();
+ const dx=e.clientX-s.x,W=pg.clientWidth;let d=0;if(!cancel){if(Math.abs(s.v)>.45)d=Math.sign(s.v);else if(Math.abs(dx)>W*.22)d=Math.sign(dx)}
+ go(S.page-d)}
+pg.addEventListener("pointerup",e=>swEnd(e,false));pg.addEventListener("pointercancel",e=>swEnd(e,true));
+document.addEventListener("click",e=>{if(performance.now()-S.swAt<300){e.stopPropagation();e.preventDefault()}},true);
+pg.addEventListener("contextmenu",e=>e.preventDefault());
+/* ── 円形スタンプメニュー ── */
+let WH=null;
+const inset=()=>{const c=getComputedStyle($("#probe"));return{t:parseFloat(c.paddingTop)||0,r:parseFloat(c.paddingRight)||0,b:parseFloat(c.paddingBottom)||0,l:parseFloat(c.paddingLeft)||0}};
+const haptic=n=>{try{navigator.vibrate&&navigator.vibrate(n)}catch(e){}};
+function wpos(w,i,on){const a=(i*360/w.n-90)*Math.PI/180,r=w.R+(on?8:0);return[Math.cos(a)*r,Math.sin(a)*r]}
+function openWheel(x,y,pid,kbd){
+ if(WH||S.tab!=="home"||S.page!==1)return;const st=S.stamps.slice(0,8);
+ if(!st.length){toast("スタンプがありません。設定から追加できます","warn");return}
+ let tgt=null;if(!kbd){const r=$$("#list .row").find(r=>{const b=r.getBoundingClientRect();return y>=b.top&&y<=b.bottom});if(r)tgt=S.events.find(e=>e.id===r.dataset.id)}
+ tgt=tgt||selEv();if(!tgt){toast("先に日付を追加してください","warn");return}
+ closeMenu();lpCancel();sw=null;
+ const n=st.length,ins=inset(),vw=innerWidth,vh=innerHeight,m=10,avail=Math.min(vw-ins.l-ins.r,vh-ins.t-ins.b)/2-m;
+ const R=Math.max(60,Math.min(104,avail-46)),D=Math.min(R+46,avail),cl=(v,lo,hi)=>lo>hi?(lo+hi)/2:Math.min(hi,Math.max(lo,v));
+ const cx=kbd?(ins.l+vw-ins.r)/2:cl(x,ins.l+m+D,vw-ins.r-m-D),cy=kbd?(ins.t+vh-ins.b)/2:cl(y,ins.t+m+D,vh-ins.b-m-D);
+ const el=document.createElement("div");el.className="wheel";el.setAttribute("role","dialog");el.setAttribute("aria-modal","true");el.setAttribute("aria-label",`「${tgt.title}」にスタンプを付ける`);
+ el.innerHTML=`<div class="wsc"></div><div class="wd glass" role="listbox" aria-label="スタンプ" style="left:${cx}px;top:${cy}px;width:${2*D}px;height:${2*D}px;margin:${-D}px 0 0 ${-D}px;--hub:${Math.round(2*(R-34))}px"><i class="knob"></i>${st.map((s,i)=>`<button type="button" class="wi${tc(s.theme)}" role="option" aria-selected="false" aria-label="${esc(s.name)}" data-i="${i}" style="--w:var(--${s.theme})"><span aria-hidden="true">${SI(s.icon,26)}</span></button>`).join("")}<div class="hub" aria-live="polite"><span class="hi"></span><b></b><small></small></div></div>`;
+ document.body.appendChild(el);
+ const w=WH={st,tgt,n,R,D,cx,cy,sel:-1,pid,kbd,el,items:$$(".wi",el),hub:$(".hub",el),knob:$(".knob",el),prev:document.activeElement};
+ S.wheel=true;w.items.forEach((b,i)=>{const[px,py]=wpos(w,i,false);b.style.setProperty("--x",px+"px");b.style.setProperty("--y",py+"px")});hubSet();
+ w.mv=e=>{if(!w.kbd&&e.pointerId===w.pid)wheelAt(e.clientX,e.clientY)};
+ w.up=e=>{if(!w.kbd&&e.pointerId===w.pid)wheelEnd(true)};w.cc=e=>{if(!w.kbd&&e.pointerId===w.pid)wheelEnd(false)};
+ w.tm=e=>{if(e.cancelable)e.preventDefault()};w.kd=wheelKey;w.cm=e=>e.preventDefault();w.bl=()=>closeWheel(true);
+ document.addEventListener("pointermove",w.mv);document.addEventListener("pointerup",w.up);document.addEventListener("pointercancel",w.cc);document.addEventListener("touchmove",w.tm,{passive:false});document.addEventListener("keydown",w.kd,true);document.addEventListener("contextmenu",w.cm);addEventListener("blur",w.bl);
+ el.offsetHeight;el.classList.add("in");haptic(12);
+ if(!RM)w.items.forEach((b,i)=>{const[px,py]=wpos(w,i,false);b.animate([{transform:"translate(-50%,-50%) scale(.3)",opacity:0},{transform:`translate(-50%,-50%) translate(${px}px,${py}px) scale(1)`,opacity:1}],{duration:460,delay:i*22,easing:"cubic-bezier(.22,1.12,.36,1)",fill:"backwards"})});
+ if(kbd)setSel(0)}
+function hubSet(){const w=WH,s=w.st[w.sel],hi=$(".hi",w.hub);hi.innerHTML=s?SI(s.icon,36):"";$("b",w.hub).textContent=s?s.name:"スタンプを選ぶ";$("small",w.hub).textContent=s?`${w.tgt.title}に付ける`:`対象：${w.tgt.title}`;if(s&&!RM)hi.animate([{transform:"scale(.6)",opacity:.4},{transform:"none",opacity:1}],{duration:260,easing:EASE})}
+function setSel(i){const w=WH;if(!w||i===w.sel)return;w.sel=i;
+ w.items.forEach((b,k)=>{const on=k===i,[px,py]=wpos(w,k,on);b.style.setProperty("--x",px+"px");b.style.setProperty("--y",py+"px");b.style.setProperty("--s",on?1.3:1);b.setAttribute("aria-selected",String(on));b.style.zIndex=on?2:1});
+ if(i>=0){const[px,py]=wpos(w,i,true);w.knob.style.setProperty("--x",px+"px");w.knob.style.setProperty("--y",py+"px");w.knob.style.opacity=1}else w.knob.style.opacity=0;
+ hubSet();haptic(6);if(w.kbd&&i>=0)w.items[i].focus({preventScroll:true})}
+function wheelAt(x,y){const w=WH;if(!w)return;const dx=x-w.cx,dy=y-w.cy,d=Math.hypot(dx,dy);let i=-1;
+ if(d>=44&&d<=w.D+90){const a=((Math.atan2(dy,dx)*180/Math.PI+90)%360+360)%360;i=Math.round(a/(360/w.n))%w.n}setSel(i)}
+function wheelKey(e){const w=WH;if(!w)return;const k=e.key;
+ if(k==="Escape"){e.preventDefault();e.stopPropagation();wheelEnd(false);return}
+ if(!w.kbd)return;
+ if(k==="ArrowRight"||k==="ArrowDown"){e.preventDefault();setSel((w.sel+1+w.n)%w.n)}
+ else if(k==="ArrowLeft"||k==="ArrowUp"){e.preventDefault();setSel((w.sel-1+w.n)%w.n)}
+ else if(k==="Enter"||k===" "){e.preventDefault();wheelEnd(true)}
+ else if(k==="Tab")e.preventDefault()}
+async function wheelEnd(ok){const w=WH;if(!w||w.done)return;w.done=true;const s=w.st[w.sel];
+ if(ok&&s){haptic(18);if(!RM){w.items[w.sel].animate([{transform:`translate(-50%,-50%) translate(${wpos(w,w.sel,true)[0]}px,${wpos(w,w.sel,true)[1]}px) scale(1.3)`},{transform:`translate(-50%,-50%) translate(${wpos(w,w.sel,true)[0]}px,${wpos(w,w.sel,true)[1]}px) scale(1.6)`},{transform:`translate(-50%,-50%) translate(${wpos(w,w.sel,true)[0]}px,${wpos(w,w.sel,true)[1]}px) scale(1.3)`}],{duration:200,easing:EASE});await wait(170)}
+  closeWheel();if(applyStamp(w.tgt.id,s.id)){toast(`「${s.name}」を付けました`);const c=$(`#list [data-open="${w.tgt.id}"] .chip`);if(c&&!RM)c.animate([{transform:"scale(.6)"},{transform:"none"}],{duration:420,easing:EASE})}}
+ else{closeWheel();toast("キャンセルしました","x")}}
+function closeWheel(now){const w=WH;if(!w)return;WH=null;S.wheel=false;
+ document.removeEventListener("pointermove",w.mv);document.removeEventListener("pointerup",w.up);document.removeEventListener("pointercancel",w.cc);document.removeEventListener("touchmove",w.tm);document.removeEventListener("keydown",w.kd,true);document.removeEventListener("contextmenu",w.cm);removeEventListener("blur",w.bl);
+ if(w.kbd&&w.prev&&w.prev.focus)w.prev.focus({preventScroll:true});
+ if(now||RM){w.el.remove();return}w.el.classList.remove("in");w.el.classList.add("out");setTimeout(()=>w.el.remove(),260)}
+/* ── メニュー ── */
+function menu(open){const p=$("#pop");if(!open){closeMenu();return}
+ const it=(k,ic,t,on)=>`<button role="menuitemradio" aria-checked="${!!on}" data-m="${k}">${I(ic,20)}<span>${t}</span>${on?I("check",20):""}</button>`;
+ p.innerHTML=`<div class="pscrim" data-act="menux"></div>`;$("#na").insertAdjacentHTML("beforeend",`<div class="menu glass" id="mn" role="menu">${it("nearest","cal","近い順",S.sort==="nearest")}${it("manual","hand","手動で並べる",S.sort==="manual")}${canMove()?`<hr><button role="menuitem" data-m="reorder">${I("sort",20)}<span>並べ替えを始める</span></button>`:""}<hr><button role="menuitem" data-m="stamps">${I("stamp",20)}<span>スタンプを管理</span></button></div>`)}
+const closeMenu=()=>{const m=$("#mn");if(m)m.remove();$("#pop").innerHTML=""};
+/* ── シート・アラート ── */
+let prevFocus=null;const layer=$("#layer");
+function present(html,label,guard,focusId,keep){
+ if(layer.classList.contains("in")&&$(".sheet",layer)){const sh=$(".sheet",layer),top=sh.scrollTop;sh.setAttribute("aria-label",label);$(".drag",layer).innerHTML=`<div class="grab"></div>${html.head}`;[...sh.children].forEach(n=>{if(!n.classList.contains("drag"))n.remove()});sh.insertAdjacentHTML("beforeend",html.body);S.guard=guard||null;sh.scrollTop=keep?top:0;
+  if(!RM&&!keep)[...sh.children].slice(1).forEach((e,i)=>e.animate([{opacity:0,transform:"translateY(10px)"},{opacity:1,transform:"none"}],{duration:380,delay:Math.min(i,8)*30,easing:EASE,fill:"backwards"}));
+  if(focusId)$(focusId,layer)?.focus({preventScroll:true});return}
+ prevFocus=document.activeElement;layer.innerHTML=`<div class="scrim" data-act="sheetx"></div><section class="sheet" role="dialog" aria-modal="true" aria-label="${label}"><div class="drag"><div class="grab"></div>${html.head}</div>${html.body}</section>`;document.body.style.overflow="hidden";S.guard=guard||null;layer.offsetHeight;layer.classList.add("in");dragify();
+ if(!RM)$$(".sheet .hero,.sheet .grp,.sheet .gl",layer).forEach((e,i)=>e.animate([{opacity:0,transform:"translateY(14px)"},{opacity:1,transform:"none"}],{duration:560,delay:140+Math.min(i,10)*35,easing:EASE,fill:"backwards"}));
+ if(focusId)setTimeout(()=>$(focusId,layer)?.focus({preventScroll:true}),RM?0:520)}
+async function dismiss(force){if(!force&&S.guard&&!(await S.guard()))return false;layer.classList.remove("in");document.body.style.overflow="";S.guard=null;S.back=null;S.stR=false;S.detailId=null;S.stId=null;await wait(480);layer.innerHTML="";prevFocus&&prevFocus.focus&&prevFocus.focus({preventScroll:true});return true}
+function dragify(){const sh=$(".sheet",layer),dr=$(".drag",layer);let y0=0,t0=0,dy=0,on=false;
+ dr.onpointerdown=e=>{if(e.target.closest("button")||sh.scrollTop>0)return;on=true;y0=e.clientY;t0=e.timeStamp;dy=0;dr.setPointerCapture(e.pointerId);sh.style.transition="none"};
+ dr.onpointermove=e=>{if(!on)return;dy=Math.max(0,e.clientY-y0);sh.style.transform=`translate(-50%,${dy}px)`;$(".scrim",layer).style.opacity=Math.max(0,1-dy/500)};
+ dr.onpointerup=dr.onpointercancel=async e=>{if(!on)return;on=false;const v=dy/Math.max(1,e.timeStamp-t0);sh.style.transition="";$(".scrim",layer).style.opacity="";sh.style.transform="";if(dy>120||v>.7){if(!(await dismiss()))sh.style.transform=""}}}
+function ask(title,msg,ok){return new Promise(res=>{const d=document.createElement("div");d.className="alert";d.innerHTML=`<div class="ascrim"></div><div class="abox" role="alertdialog" aria-modal="true" aria-label="${esc(title)}"><div class="at"><b>${esc(title)}</b><p>${esc(msg)}</p></div><div class="ab"><button data-r="0">キャンセル</button><button data-r="1">${esc(ok)}</button></div></div>`;document.body.appendChild(d);d.offsetHeight;d.classList.add("in");$("button",d).focus({preventScroll:true});d.onclick=e=>{const b=e.target.closest("[data-r]");if(!b)return;d.classList.remove("in");setTimeout(()=>d.remove(),RM?0:350);res(b.dataset.r==="1")}})}
+const head=(l,t,r)=>`<div class="sh">${l}<h2>${t}</h2>${r||"<span></span>"}</div>`,xbtn=`<button class="gbtn glass" data-act="sheetx" aria-label="閉じる">${I("x",20)}</button>`,backbtn=l=>`<button class="gbtn glass" data-act="${l[0]}" aria-label="${l[1]}">${I("left",20)}</button>`;
+/* ── 予定の詳細 ── */
+function detail(id,back){const e=S.events.find(x=>x.id===id);if(!e)return;S.detailId=id;S.back=back||null;const c=cnt(diff(e.date)),s=stOf(e.stampId);
+ const pk=S.stamps.length?`<div class="sp" role="group" aria-label="スタンプ">${S.stamps.map(t=>`<button type="button" class="${tc(t.theme).trim()}" style="--w:var(--${t.theme})" data-sp="${t.id}" aria-pressed="${t.id===e.stampId}"><span aria-hidden="true">${SI(t.icon,24)}</span><em>${esc(t.name)}</em></button>`).join("")}</div>`:`<p class="note" style="color:var(--muted)">スタンプがありません。設定から追加できます。</p>`;
+ const pl=hasPlace(e)?esc(e.place.name||e.place.address):"未登録";
+ present({head:head(back?backbtn(["back","戻る"]):xbtn,"詳細",`<button class="gbtn glass" data-edit="${e.id}" aria-label="編集">${I("pencil",20)}</button>`),body:`<div class="hero${e.img?" img":""}${tc(e.theme)}" style="--w:var(--${e.theme})" role="group" aria-label="${esc(e.title+"、"+c.say)}">${bg(e)}<div class="head"><span class="chip" id="dhc" aria-hidden="true">${(s?SI(s.icon):esc(e.symbol))||I("cal",24)}</span><span class="ttl">${esc(e.title)}</span></div><div class="cnt" aria-hidden="true">${c.p?`<span>${c.p}</span>`:""}<b>${c.v}</b>${c.s?`<span>${c.s}</span>`:""}</div></div><div class="grp"><div class="cell"><span>日付</span><span class="v">${fmt(e.date,1)}</span></div><button class="cell" data-goplace="${e.id}"><span>場所</span><span class="v">${pl}</span></button><div class="cell col"><span style="color:var(--muted);font-size:.88rem">スタンプ</span>${pk}</div><div class="cell col"><span style="color:var(--muted);font-size:.88rem">メモ</span>${e.note?`<p class="note">${esc(e.note)}</p>`:`<p class="note" style="color:var(--muted)">メモはありません</p>`}</div></div><p class="gl" style="margin-top:var(--sp8)"></p><div class="grp"><button class="cell dg" data-del="${e.id}">この日付を削除</button></div>`},"詳細")}
+/* ── 追加・編集 ── */
+function editor(id,opts={}){const e=id?S.events.find(x=>x.id===id):null,d=e?{title:e.title,date:e.date,theme:e.theme,symbol:e.symbol,note:e.note,img:e.img||"",pl:e.place.name,pa:e.place.address}:{title:"",date:opts.date||todayISO(),theme:"lav",symbol:"",note:"",img:"",pl:"",pa:""};S.back=null;
+ const snap=()=>JSON.stringify({title:$("#t").value,date:$("#d").value,theme:d.theme,symbol:$("#s").value.trim(),note:$("#n").value,img:d.img,pl:$("#pl").value,pa:$("#pa").value});
+ present({head:head(xbtn,e?"日付を編集":"日付を追加",`<button class="gbtn tint glass" id="ok" aria-label="${e?"保存":"追加"}">${I("check",20)}</button>`),body:`<form id="f" novalidate><p class="gl">タイトル</p><div class="grp"><label class="cell"><input id="t" maxlength="40" placeholder="例：夏フェス、誕生日、卒業式" value="${esc(d.title)}" autocomplete="off" aria-label="タイトル"></label></div><div id="e-t"></div><p class="gl">日付</p><div class="grp"><label class="cell"><span>日付</span><input id="d" type="date" min="1900-01-01" max="2200-12-31" value="${d.date}"></label><div class="cell"><span>カードの表示</span><span class="v" id="pv" aria-live="polite"></span></div></div><div id="e-d"></div><p class="gl">場所（任意）</p><div class="grp"><label class="cell"><span>名称</span><input id="pl" maxlength="60" style="text-align:right" placeholder="例：サンプルホール" value="${esc(d.pl)}" autocomplete="off"></label><label class="cell"><span>住所</span><input id="pa" maxlength="120" style="text-align:right" placeholder="例：大阪府大阪市北区…" value="${esc(d.pa)}" autocomplete="off"></label></div><p class="gl">色とアイコン</p><div class="grp"><div class="cell col"><div class="sw" id="sw" role="group" aria-label="色">${THEMES.map(([k,n,x])=>`<button type="button" class="${x?"t"+x:""}" data-th="${k}" style="--w:var(--${k})" aria-label="${n}" aria-pressed="${d.theme===k}">${d.theme===k?I("check",20):""}</button>`).join("")}</div></div><div class="cell col"><div class="em" id="em" role="group" aria-label="アイコン"><button type="button" data-sy="" aria-label="アイコンなし" aria-pressed="${!d.symbol}">${I("x",20)}</button>${EMOJI.map(s=>`<button type="button" data-sy="${s}" aria-pressed="${d.symbol===s}">${s}</button>`).join("")}</div></div><label class="cell"><span>ほかの絵文字</span><input id="s" style="text-align:right" placeholder="🎤" value="${esc(d.symbol)}"></label></div><div id="e-s"></div><p class="gl">写真（任意）</p><div class="grp"><div class="cell col"><div class="pvb" id="pvb"></div></div><button type="button" class="cell ac" id="pick"><span>写真を選ぶ</span>${I("plus",20)}</button><button type="button" class="cell dg" id="rm">写真を外す</button></div><input id="file" type="file" accept="image/*" hidden><div id="e-i"></div><p class="gl">メモ（任意）</p><div class="grp"><label class="cell"><textarea id="n" maxlength="500" placeholder="楽しみにしていることなど" aria-label="メモ">${esc(d.note)}</textarea></label></div><div id="e-n"></div></form>`},e?"日付を編集":"日付を追加",async()=>snap()===init||await ask("変更を破棄しますか？","入力した内容は保存されません。","破棄"),opts.focus||(e?null:"#t"));
+ const init=snap();
+ const pv=()=>{const v=$("#d").value;$("#pv").textContent=parse(v)?cnt(diff(v)).ph:""};pv();
+ const mark=v=>$$("#em [data-sy]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.sy===v)));
+ $("#d").oninput=pv;$("#em").onclick=ev=>{const b=ev.target.closest("[data-sy]");if(b){d.symbol=b.dataset.sy;$("#s").value=d.symbol;mark(d.symbol)}};
+ $("#s").oninput=()=>{d.symbol=$("#s").value.trim();mark(d.symbol)};
+ $("#sw").onclick=ev=>{const b=ev.target.closest("[data-th]");if(!b)return;d.theme=b.dataset.th;$$("#sw button").forEach(x=>{const on=x===b;x.setAttribute("aria-pressed",on);x.innerHTML=on?I("check",20):""});pvImg()};
+ const pvImg=()=>{const b=$("#pvb");b.style.setProperty("--w",`var(--${d.theme})`);b.className="pvb"+(d.img?" img":"");b.innerHTML=d.img?bg(d):"写真なし";$("#rm").hidden=!d.img};pvImg();
+ $("#pick").onclick=()=>$("#file").click();$("#rm").onclick=()=>{d.img="";$("#file").value="";pvImg()};
+ $("#file").onchange=async ev=>{const fl=ev.target.files[0];if(!fl)return;$("#e-i").innerHTML="";try{d.img=await shrink(fl);pvImg()}catch(x){$("#e-i").innerHTML=`<p class="err" role="alert">${I("warn",16)}この写真は読み込めませんでした。</p>`}};
+ const submit=async()=>{const title=$("#t").value.trim(),date=$("#d").value,sym=$("#s").value.trim(),note=$("#n").value.trim(),er={};
+  if(!title)er.t="タイトルを入力してください。";else if(glen(title)>40)er.t="タイトルは40文字までです。";
+  if(!parse(date))er.d="日付を選んでください。";
+  if(sym&&(glen(sym)!==1||/^[\x00-\x7f]*$/.test(sym)))er.s="絵文字は1つだけ入力してください。";
+  if(note.length>500)er.n="メモは500文字までです。";
+  ["t","d","s","n"].forEach(k=>{$("#e-"+k).innerHTML=er[k]?`<p class="err" role="alert">${I("warn",16)}${er[k]}</p>`:""});
+  const f=Object.keys(er)[0];if(f){$({t:"#t",d:"#d",s:"#s",n:"#n"}[f]).focus();return}
+  const item={id:e?e.id:uid(),title,date,theme:d.theme,symbol:sym,note,img:d.img,place:normPlace({name:$("#pl").value.trim(),address:$("#pa").value.trim()}),stampId:e?e.stampId:"",order:e?e.order:Math.max(-1,...S.events.map(x=>x.order))+1};
+  const l=e?S.events.map(x=>x.id===e.id?item:x):[...S.events,item];
+  if(!save(l))return;await dismiss(true);S.events=l;S.filter="all";S.q="";S.reorder=false;
+  if(S.tab!=="home"){S.tab="home";S.sel=item.id;S.day=item.date;const p=parse(item.date);S.cm={y:p.y,m:p.mo};renderTab()}else select(item.id);
+  toast(e?"変更を保存しました":"日付を追加しました");const r=$(`#list [data-id="${item.id}"]`);r&&S.page===1&&r.scrollIntoView({block:"center",behavior:RM?"auto":"smooth"})};
+ $("#ok").onclick=submit;$("#f").onsubmit=ev=>{ev.preventDefault();submit()}}
+async function del(id){const e=S.events.find(x=>x.id===id);if(!e)return;if(!await ask("この日付を削除しますか？",`「${e.title}」を削除します。この操作は取り消せません。`,"削除"))return;
+ await dismiss(true);const r=$(`#list [data-id="${id}"]`);if(r&&!RM&&S.page===1){const h=r.offsetHeight;await r.animate([{height:h+"px",opacity:1,transform:"scale(1)"},{height:"0px",opacity:0,transform:"scale(.94)"}],{duration:340,easing:EASE,fill:"forwards"}).finished}
+ if(commit(S.events.filter(x=>x.id!==id).sort((a,b)=>a.order-b.order).map((x,i)=>({...x,order:i}))))toast("削除しました","check")}
+function move(id,k){const l=groups()[0].items.map(x=>x.e),i=l.findIndex(x=>x.id===id),j=i+k;if(j<0||j>=l.length)return;[l[i],l[j]]=[l[j],l[i]];commit(l.map((x,n)=>({...x,order:n})))}
+/* ── スタンプ管理 ── */
+function stampsView(keep){S.stId=null;S.back=null;const st=S.stamps;
+ const tiles=st.map((s,i)=>`<div class="sgi"><button class="stile${tc(s.theme)}" data-st="${s.id}" style="--w:var(--${s.theme})" aria-label="${esc(`${s.name}、${useCount(s.id)}件`)}"><span class="chip" aria-hidden="true">${SI(s.icon,24)}</span><span class="sn">${esc(s.name)}</span><span class="sc">${useCount(s.id)}件</span></button>${S.stR?`<div class="smv"><button data-smv="${s.id}:-1" aria-label="${esc(s.name)}を前へ" ${i?"":"disabled"}>${I("left",18)}</button><button data-smv="${s.id}:1" aria-label="${esc(s.name)}を後ろへ" ${i===st.length-1?"disabled":""}>${I("right",18)}</button></div>`:""}</div>`).join("");
+ present({head:head(xbtn,"スタンプ",`<button class="gbtn tint glass" data-act="st-add" aria-label="スタンプを追加">${I("plus",20)}</button>`),body:st.length?`<div class="sgt"><button class="pillb" data-act="st-reorder" aria-pressed="${S.stR}">${I("sort",16)}${S.stR?"完了":"並べ替え"}</button></div><div class="sg">${tiles}</div><p class="foot">長押しメニューには先頭の${Math.min(8,st.length)}個が表示されます。並べ替えで入れ替えできます。</p>`:`<div class="empty sm"><div class="ico" aria-hidden="true">${I("stamp",48)}</div><h3>スタンプなし</h3><p>スタンプを追加すると、日付に付けて整理できます。</p><button class="btn" data-act="st-add">スタンプを追加</button></div>`},"スタンプ管理",null,null,keep)}
+function stampView(id,keep){const s=stOf(id);if(!s){stampsView();return}S.stId=id;S.back=null;
+ const evs=S.events.filter(e=>e.stampId===id).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:a.order-b.order);
+ const list=evs.length?`<div class="grp">${evs.map(e=>{const c=cnt(diff(e.date));return`<button class="cell" data-sev="${e.id}"><span class="ttl">${esc(e.title)}<span class="sub">${fmt(e.date,1)}</span></span><span class="v">${c.say}</span></button>`}).join("")}</div>`:`<div class="empty sm"><div class="ico" aria-hidden="true">${I("cale",40)}</div><h3>予定なし</h3><p>このスタンプを付けた予定はまだありません。ホームの余白を長押しして付けられます。</p></div>`;
+ present({head:head(backbtn(["st-back","スタンプ一覧へ"]),"スタンプ"),body:`<div class="hero${tc(s.theme)}" id="sh" style="--w:var(--${s.theme})" role="group"><div class="head"><span class="chip" id="shc" aria-hidden="true">${SI(s.icon,24)}</span><span class="ttl" id="shn">${esc(s.name)}</span></div><div class="cnt" aria-hidden="true"><b>${evs.length}</b><span>件の予定</span></div></div><p class="gl">名前</p><div class="grp"><label class="cell"><input id="sn" maxlength="12" value="${esc(s.name)}" autocomplete="off" aria-label="スタンプの名前"></label></div><p class="gl">アイコン</p><div class="grp"><div class="cell col"><div class="em nb" role="group" aria-label="アイコン">${SYMK.map(x=>`<button type="button" data-ssy="${x}" aria-label="${SYMLBL[x]}" aria-pressed="${s.icon===x}">${SI(x,24)}</button>`).join("")}</div></div></div><p class="gl">テーマカラー</p><div class="grp"><div class="cell col"><div class="sw nb" style="grid-template-columns:repeat(7,1fr)" role="group" aria-label="色">${STHEMES.map(([k,n,x])=>`<button type="button" class="${x?"t"+x:""}" data-sth="${k}" style="--w:var(--${k})" aria-label="${n}" aria-pressed="${s.theme===k}">${s.theme===k?I("check",20):""}</button>`).join("")}</div></div></div><p class="gl">このスタンプの予定</p>${list}<p class="gl" style="margin-top:var(--sp8)"></p><div class="grp"><button class="cell dg" data-act="st-del">このスタンプを削除</button></div>`},"スタンプの編集",null,null,keep);
+ const sn=$("#sn");sn.oninput=()=>{const v=sn.value.trim().slice(0,12);if(!v)return;$("#shn").textContent=v;patchStamp(id,{name:v})};sn.onblur=()=>{const c=stOf(id);if(c&&!sn.value.trim())sn.value=c.name};
+}
+function patchStamp(id,p){return commit(null,S.stamps.map(s=>s.id===id?{...s,...p}:s))}
+function paintStamp(id){const s=stOf(id),h=$("#sh");if(!s||!h)return;h.className="hero"+tc(s.theme);h.style.setProperty("--w",`var(--${s.theme})`);$("#shc").innerHTML=SI(s.icon,24);
+ $$("[data-ssy]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.ssy===s.icon)));$$("[data-sth]").forEach(b=>{const on=b.dataset.sth===s.theme;b.setAttribute("aria-pressed",String(on));b.innerHTML=on?I("check",20):""})}
+function moveStamp(id,k){const l=[...S.stamps],i=l.findIndex(s=>s.id===id),j=i+k;if(j<0||j>=l.length)return;[l[i],l[j]]=[l[j],l[i]];if(commit(null,l))stampsView(true)}
+/* ── 操作 ── */
+document.addEventListener("click",async ev=>{const q=s=>ev.target.closest(s);let b;
+ if(WH){const w=q(".wi");if(w&&WH.kbd){setSel(+w.dataset.i);wheelEnd(true)}else if(q(".wsc")&&WH.kbd)wheelEnd(false);return}
+ if(b=q("[data-pg]")){go(+b.dataset.pg);return}
+ if(b=q("[data-tab]")){if(S.tab!==b.dataset.tab){S.tab=b.dataset.tab;S.reorder=false;renderTab()}return}
+ if(b=q("[data-m]")){const k=b.dataset.m;closeMenu();if(k==="reorder"){S.reorder=true;renderNav();flip(renderList)}else if(k==="stamps"){stampsView()}else{S.sort=k;S.reorder=false;try{localStorage.setItem(SKEY,k)}catch(e){}flip(renderList);renderNav()}return}
+ if(b=q("[data-open]")){const id=b.dataset.open;select(id);detail(id);return}
+ if(b=q("[data-sev]")){const sid=S.stId;detail(b.dataset.sev,()=>stampView(sid));return}
+ if(b=q("[data-edit]")){editor(b.dataset.edit);return}
+ if(b=q("[data-del]")){del(b.dataset.del);return}
+ if(b=q("[data-goplace]")){const id=b.dataset.goplace;await dismiss(true);select(id);if(S.tab!=="home"){S.tab="home";S.page=2;renderTab()}else go(2);return}
+ if(b=q("[data-sp]")){const id=S.detailId,cur=S.events.find(e=>e.id===id);if(!cur)return;const sid=cur.stampId===b.dataset.sp?"":b.dataset.sp;
+  if(applyStamp(id,sid)){$$("[data-sp]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.sp===sid)));const s=stOf(sid),c=$("#dhc");if(c)c.innerHTML=(s?SI(s.icon):esc(cur.symbol))||I("cal",24);toast(s?`「${s.name}」を付けました`:"スタンプを外しました")}return}
+ if(b=q("[data-st]")){stampView(b.dataset.st);return}
+ if(b=q("[data-smv]")){const[id,k]=b.dataset.smv.split(":");moveStamp(id,+k);return}
+ if(b=q("[data-ssy]")){if(S.stId){patchStamp(S.stId,{icon:b.dataset.ssy});paintStamp(S.stId)}return}
+ if(b=q("[data-sth]")){if(S.stId){patchStamp(S.stId,{theme:b.dataset.sth});paintStamp(S.stId)}return}
+ if(b=q("[data-filter]")){S.filter=b.dataset.filter;S.reorder=false;setSeg(b);flip(renderList);renderNav();return}
+ if(b=q("[data-mv]")){const[id,k]=b.dataset.mv.split(":");move(id,+k);return}
+ if(b=q("[data-day]")){S.day=b.dataset.day;const ev=S.events.filter(e=>e.date===S.day).sort((a,c)=>a.order-c.order);if(ev.length&&!ev.some(e=>e.id===S.sel))S.sel=ev[0].id;refresh();return}
+ if(b=q("[data-cal]")){let{y,m}=S.cm||ymNow();m+=+b.dataset.cal;if(m<1){m=12;y--}if(m>12){m=1;y++}if(y<1900||y>2200)return;S.cm={y,m};renderCal();renderNav();return}
+ if(b=q("[data-tmode]")){setSeg(b);try{b.dataset.tmode==="system"?localStorage.removeItem(TKEY):localStorage.setItem(TKEY,b.dataset.tmode)}catch(e){}applyTheme();return}
+ if(b=q("[data-sortset]")){setSeg(b);S.sort=b.dataset.sortset;S.reorder=false;try{localStorage.setItem(SKEY,S.sort)}catch(e){}return}
+ if(b=q("[data-act]")){const a=b.dataset.act;
+  if(a==="new")editor(null,{date:S.tab==="home"&&S.page===0?S.day:todayISO()});else if(a==="menu")menu(!$("#mn"));else if(a==="menux")closeMenu();
+  else if(a==="reorder"){S.reorder=false;renderNav();flip(renderList)}
+  else if(a==="sheetx")dismiss();
+  else if(a==="back"){const f=S.back;S.back=null;f&&f()}
+  else if(a==="today"){S.cm=ymNow();S.day=todayISO();renderCal();renderNav()}
+  else if(a==="place-edit"){const e=selEv();e&&editor(e.id,{focus:"#pl"})}
+  else if(a==="stamps")stampsView();
+  else if(a==="st-back")stampsView();
+  else if(a==="st-reorder"){S.stR=!S.stR;stampsView(true)}
+  else if(a==="st-add"){const id=uid();if(commit(null,[...S.stamps,{id,name:"新しいスタンプ",icon:"star",theme:STHEMES[S.stamps.length%STHEMES.length][0]}])){stampView(id);setTimeout(()=>{const i=$("#sn");i&&(i.focus(),i.select())},RM?0:60)}}
+  else if(a==="st-del"){const s=stOf(S.stId);if(!s)return;const n=useCount(s.id);if(await ask(`「${s.name}」を削除しますか？`,n?`${n}件の日付からスタンプが外れます。この操作は取り消せません。`:"この操作は取り消せません。","削除")){if(commit(S.events.map(e=>e.stampId===s.id?{...e,stampId:""}:e),S.stamps.filter(x=>x.id!==s.id))){stampsView();toast("スタンプを削除しました")}}}
+  else if(a==="reset"){S.error=false;commit([])}
+  else if(a==="seed"){if(await ask("サンプルに戻しますか？","いまの日付とスタンプはすべて置き換わります。","戻す")){S.error=false;S.sel=null;S.cm=null;S.day="";commit(seed(),defStamps());toast("サンプルに戻しました")}}
+  else if(a==="wipe"){if(await ask("日付をすべて削除しますか？","この操作は取り消せません。スタンプは残ります。","削除")){S.error=false;S.sel=null;commit([]);toast("すべて削除しました")}}}});
+document.addEventListener("input",ev=>{if(ev.target.id==="q"){S.q=ev.target.value;S.reorder=false;flip(renderList);renderNav()}});
+document.addEventListener("keydown",ev=>{
+ if(ev.target.id==="rail"&&(ev.key==="Enter"||ev.key===" ")){ev.preventDefault();openWheel(0,0,null,true);return}
+ if(ev.key==="Escape"){if(WH)return;if($("#mn"))closeMenu();else if(layer.classList.contains("in")&&!$(".alert"))dismiss();return}
+ if(S.tab==="home"&&!WH&&!layer.classList.contains("in")&&!/INPUT|TEXTAREA/.test(ev.target.tagName)&&!$("#mn")){if(ev.key==="ArrowLeft")go(S.page-1);else if(ev.key==="ArrowRight")go(S.page+1)}});
+function applyTheme(){let t="system";try{t=localStorage.getItem(TKEY)||"system"}catch(e){}t==="system"?document.documentElement.removeAttribute("data-theme"):document.documentElement.setAttribute("data-theme",t)}
+let raf=0;const onScroll=()=>{if(raf)return;raf=requestAnimationFrame(()=>{raf=0;navP()})};
+[...panes(),sv].forEach(p=>p.addEventListener("scroll",onScroll,{passive:true}));
+addEventListener("resize",()=>{closeWheel(true);layoutPager(false)});
+document.addEventListener("visibilitychange",()=>{if(document.hidden)closeWheel(true)});
+try{S.sort=localStorage.getItem(SKEY)==="manual"?"manual":"nearest"}catch(e){}
+applyTheme();load();S.cm=ymNow();S.day=todayISO();renderTab();S.last=todayISO();
+const tick=()=>{if(todayISO()!==S.last&&!layer.classList.contains("in")&&!WH){S.last=todayISO();S.bgKey="";renderTab()}};
+setInterval(tick,30000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)tick()});addEventListener("focus",tick);
+</script>
+</body>
+</html>
